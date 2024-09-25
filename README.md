@@ -1,2 +1,2 @@
 # firja
-Zarjavel physics engine funnny
+Zarjavel physics engine
