@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-object-midpoints="false"
+     inkscape:snap-smooth-nodes="false"
+     inkscape:snap-midpoints="true"
+     inkscape:zoom="2"
+     inkscape:cx="468.75"
+     inkscape:cy="430"
+     inkscape:window-width="1920"
+     inkscape:window-height="1119"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="319.68083"
+       y="493.2232"
+       width="219.94969"
+       height="87.060058"
+       id="rect16208" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#ffcc00;stroke:#f49700;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect965"
+       width="79.351166"
+       height="36.073189"
+       x="73.100204"
+       y="123.404" />
+    <path
+       sodipodi:type="star"
+       style="fill:#5ab400;stroke:#3a8400;stroke-width:4.85766192;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:fill markers stroke;fill-opacity:1"
+       id="path4349"
+       inkscape:flatsided="true"
+       sodipodi:sides="5"
+       sodipodi:cx="347.10092"
+       sodipodi:cy="196.27"
+       sodipodi:r1="106.42706"
+       sodipodi:r2="86.101295"
+       sodipodi:arg1="-1.5707963"
+       sodipodi:arg2="-0.9424778"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 347.10092,89.842941 101.21815,73.539299 -38.66189,118.98907 -125.11252,0 -38.66189,-118.98908 z"
+       transform="matrix(0.30879053,0,0,0.30879053,-14.334416,34.756295)"
+       inkscape:transform-center-y="-3.1381726"
+       inkscape:transform-center-x="-4.144337e-05" />
+    <path
+       style="fill:#59a7e0;fill-opacity:1;stroke:#236fa6;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M 125.47002,85.656057 113.66429,121.94988 H 152.6878 L 165.42923,85.656882 Z"
+       id="path8235"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 161.71607,86.799178 c 0,0 0,0 0,0 z"
+       id="path8237" />
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text16206"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:64px;font-family:'DejaVu Sans Mono';-inkscape-font-specification:'DejaVu Sans Mono';white-space:pre;shape-inside:url(#rect16208);fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.00157;stroke-miterlimit:4;stroke-dasharray:none"><tspan
+         x="319.68164"
+         y="549.84766"
+         id="tspan28253"><tspan
+           style="font-weight:bold;-inkscape-font-specification:'DejaVu Sans Mono Bold'"
+           id="tspan28251">FIRYA</tspan></tspan></text>
+  </g>
+</svg>
