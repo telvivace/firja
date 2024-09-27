@@ -31,23 +31,9 @@ fn process_hits(objects : Vec<Vec<Object>>){
         }
     }
 }
+
 /*
-Vec<Vec<Hit(&mut object1, &mut object2)>>
-
-Vec<Vec<Free(&mut object1)
-
-
-for enum_item in innerVec.iter_mut() {
-    match enum_item {
-        Hit((one, other)) => {
-            ...shit
-            *enum_item = Free(one);
-            }
-        }
-    }
-*/
-/*
-Apply their velocity to objects. Accepts delta-time.
+Apply velocity to objects. Accepts delta-time.
 */
 fn apply_vectors(objects: Vec<Vec<Object>>, dt:f32){
     for buf in objects{
