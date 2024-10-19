@@ -36,30 +36,6 @@ int scalar_update(obj_arr* arr, unsigned size){
     }
 }
 
-/*
-let v_cm = (
-    //x velocity component
-    (one.m as f32 * one.v.0 + other.m as f32 * other.v.0)/(one.m + other.m) as f32,
-    //y velocity component
-    (one.m as f32 * one.v.1 + other.m as f32 * other.v.1)/(one.m + other.m) as f32
-);
-let one_updated = object {
-    v : (
-        //reverse relative velocity in respect to cm
-        (one.v.0 - v_cm.0)*-1.0 + v_cm.0,
-        (one.v.1 - v_cm.1)*-1.0 + v_cm.1
-        ),
-        ..*one
-};
-let other_updated = object {
-    v : (
-        //reverse relative velocity in respect to cm
-        (other.v.0 - v_cm.0)*-1.0 + v_cm.0,
-        (other.v.1 - v_cm.1)*-1.0 + v_cm.1
-    ),
-    ..*other
-};
-*/
 int main(void){
     
 }
