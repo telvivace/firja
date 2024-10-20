@@ -2,11 +2,16 @@
 #include <stdio.h>
 #include <limits.h>
 #include <string.h>
-typedef struct tree_allocPool{
+/*
+DO NOT INCLUDE BY ITSELF PLEASE
+*/
+typedef struct tree_allocPool tree_allocPool;
+
+struct tree_allocPool{
     void* pStart;
     size_t used;
     size_t allocated;
-} tree_allocPool;
+};
 
 tree_allocPool* tree_allocInitPool(size_t size);
 void tree_allocDestroyPool(tree_allocPool* pool);
