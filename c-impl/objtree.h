@@ -24,12 +24,11 @@ struct treeSplit {
 };
 struct treeNode {
     //any of those can be a null pointer
-    unsigned leaf; //true or false
     struct treeNode* left;
     struct treeNode* right;
     struct treeSplit split;
     struct treeNode* up;
-    object* buf;
+    object* buf; //if not null, its a leaf!
     __uint64_t places; //which places in the buffer are vacant?
 };
 typedef struct treeNode treeNode;

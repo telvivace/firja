@@ -1,10 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "cpu_update.h"
-int vector_update(obj_arr* arr, unsigned size){
+//hacky ass box so that things are cool
+#define LEFTBORDER -100
+#define RIGHTBORDER 100
+#define TOPBORDER 100
+#define BOTTOMBORDER -100
+int vector_update(object** arr, unsigned size){
     for(unsigned i = 0; i < size; i++){
-        for(unsigned j = 0; j < arr[i].size; j++){
-            object* obj = arr[i].arr + j;
+        for(unsigned j = 0; j < OBJBUFSIZE; j++){
+            object* obj = arr[i] + j;
             if(obj->hit) {
                 speed v_cm = {
                     .x = (obj->m * obj->v.x + obj->hit->m * obj->hit->v.x)/(obj->m + obj->hit->m),
@@ -22,18 +27,21 @@ int vector_update(obj_arr* arr, unsigned size){
                 obj->hit->hit = 0;
                 obj->hit = 0;
             }
-            
+            if(obj->x > RIGHTBORDER || obj->x < LEFTBORDER) obj->v.x *= -1;
+            else if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
         }
     }
+    return 0;
 }
-int scalar_update(obj_arr* arr, unsigned size){
+int scalar_update(object** arr, unsigned size){
     for(unsigned i = 0; i < size; i++){
-        for(unsigned j = 0; j < arr[i].size; j++){
-            object* obj = arr[i].arr + j;
+        for(unsigned j = 0; j < OBJBUFSIZE; j++){
+            object* obj = arr[i] + j;
             obj->x += obj->v.x;
             obj->y += obj->v.y;
         }
     }
+    return 0;
 }
 
 int main(void){

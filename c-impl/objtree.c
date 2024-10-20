@@ -3,7 +3,7 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
     treeNode* currentNode = tree->root;
     unsigned larger = 0;
     while(1) {
-        if(currentNode->leaf) return currentNode;
+        if(currentNode->buf) return currentNode;
         switch(currentNode->split.isx) {
             case 1: //x split
                 if(obj->x < currentNode->split.x){

@@ -3,6 +3,6 @@
 #include "objtree.h"
 #include "fancy_arrays.h"
 
-int vector_update(obj_arr* arr, unsigned size);
-int scalar_update(obj_arr* arr, unsigned size);
+int vector_update(object** arr, unsigned size);
+int scalar_update(object** arr, unsigned size);
 #endif
