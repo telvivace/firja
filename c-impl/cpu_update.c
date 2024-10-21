@@ -28,7 +28,7 @@ int vector_update(object** arr, unsigned size){
                 obj->hit = 0;
             }
             if(obj->x > RIGHTBORDER || obj->x < LEFTBORDER) obj->v.x *= -1;
-            else if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
+            if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
         }
     }
     return 0;

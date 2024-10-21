@@ -1,6 +1,7 @@
 #ifndef OBJTREE_H
 #define OBJTREE_H
 #define OBJBUFSIZE 16
+#define MAXOBJSIZE 20
 #include <ctype.h>
 #include <string.h>
 #include "tree_alloc.h"

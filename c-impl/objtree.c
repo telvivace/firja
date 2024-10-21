@@ -36,12 +36,9 @@ int tree_insertObject(objTree* tree, object* obj){
         :
             obj->y < parentNode->split.y ? 
                 parentNode->left : parentNode ->right;
-            
     }
-    else{
-        memcpy(parentNode->buf + __builtin_ctzll(parentNode->places), obj, sizeof(object));
-        parentNode->places &= ~(1 << __builtin_ctzll(parentNode->places)); //set the bit to 0
-    }
+    memcpy(parentNode->buf + __builtin_ctzll(parentNode->places), obj, sizeof(object));
+    parentNode->places &= ~(1 << __builtin_ctzll(parentNode->places)); //set the bit to 0
     return 0;
 }
 
