@@ -1,12 +1,11 @@
 #include "objtree.h"
 treeNode* tree_findParentNode(objTree* tree, object* obj){
     treeNode* currentNode = tree->root;
-    unsigned larger = 0;
     while(1) {
         if(currentNode->buf) return currentNode;
         switch(currentNode->split.isx) {
             case 1: //x split
-                if(obj->x < currentNode->split.x){
+                if(obj->x < currentNode->split.value){
                     currentNode = currentNode->left;
                 }
                 else {
@@ -14,7 +13,7 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
                 }
                 break;
             case 2:
-                if(obj->y < currentNode->split.y){
+                if(obj->y < currentNode->split.value){
                     currentNode = currentNode->left;
                 }
                 else {
@@ -24,17 +23,64 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
     }
 }
 
-int tree_balanceBuffers(object* src, object* dst_left, object* dst_right);
+int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_child){
+    // ========================
+    //  WARN FIXME leads to inaccuracy if the coordinates are large! This system uses absolute coordinates!
+    //  The issue may be avoided by using multiple relative coordinate systems later on
+    //  Also its not that bad, it starts getting actually bad at around 10^7 or more, so we're  
+    //  kinda okay if we keep the numbers low
+    // ========================
+    double accumulator = 0;
+    for(unsigned i = 0; i < OBJBUFSIZE; i++){
+        accumulator += parent->buf[i].x; 
+    };
+    double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
+    unsigned leftcount = 0; //how many objects in given child buffer
+    unsigned rightcount = 0;
+    parent->split.value = average;
+    left_child->places = ~0UL;
+    right_child->places = ~0UL;
+    if(parent->split.isx){ //split based on the average
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            if(parent->buf[i].x < average){
+                memcpy(left_child->buf + leftcount, parent->buf + i, sizeof(object));
+                left_child->places &= ~(1 << leftcount);
+                leftcount++;
+            }
+            else{
+                memcpy(right_child->buf + rightcount, parent->buf + i, sizeof(object));
+                right_child->places &= ~(1 << rightcount);
+                rightcount++;
+            }
+        }
+    }
+    else{//same but for y... didnt find a good way to reuse code
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            if(parent->buf[i].y < average){
+                memcpy(left_child->buf + leftcount, parent->buf + i, sizeof(object));
+                left_child->places &= ~(1 << leftcount);
+                leftcount++;
+
+            }
+            else{
+                memcpy(right_child->buf + rightcount, parent->buf + i, sizeof(object));
+                right_child->places &= ~(1 << rightcount);
+                rightcount++;
+            }
+        }
+    }
+    
+}
 
 int tree_insertObject(objTree* tree, object* obj){
     treeNode* parentNode = tree_findParentNode(tree, obj);
     if(!parentNode->places) {
         if(tree_splitNode(tree, parentNode) != 0) return 1; //buffer is full
         parentNode = parentNode->split.isx ? 
-            obj->x < parentNode->split.x ? 
+            obj->x < parentNode->split.value ? 
                 parentNode->left : parentNode ->right
         :
-            obj->y < parentNode->split.y ? 
+            obj->y < parentNode->split.value? 
                 parentNode->left : parentNode ->right;
     }
     memcpy(parentNode->buf + __builtin_ctzll(parentNode->places), obj, sizeof(object));
@@ -56,7 +102,8 @@ int tree_splitNode(objTree* tree, treeNode* node){
     else{
         currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
         currentNode->right = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
-        tree_balanceBuffers(currentNode->buf, currentNode->left->buf, currentNode->right->buf);
+        tree_balanceBuffers(currentNode, currentNode->left, currentNode->right);
+        tree_free(currentNode->buf);
         return 0;
     }
 }

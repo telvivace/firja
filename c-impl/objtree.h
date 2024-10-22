@@ -20,9 +20,9 @@ struct object {
 typedef struct object object;
 struct treeSplit {
     unsigned isx;
-    double x;
-    double y;
+    double value;
 };
+typedef struct treeSplit treeSplit;
 struct treeNode {
     //any of those can be a null pointer
     struct treeNode* left;
