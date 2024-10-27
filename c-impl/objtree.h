@@ -9,6 +9,22 @@ typedef struct {
     float x;
     float y;
 } speed;
+typedef struct {
+    double x;
+    double y;
+} point;
+typedef struct {
+    double width;
+    double height;
+} extent;
+typedef struct {
+    point offset;
+    extent extent;
+} rect_ofex;
+typedef struct {
+    point lowlow;
+    point highhigh;
+} rect_llhh;
 struct object {
     double x;
     double y;
@@ -36,8 +52,10 @@ typedef struct treeNode treeNode;
 
 struct objTree {
     unsigned depth;
+    unsigned searchbufsize;
     tree_allocPool* allocPool;
     treeNode* root;
+    treeNode** searchbuf;
 };
 typedef struct objTree objTree;
 

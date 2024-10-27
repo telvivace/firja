@@ -22,7 +22,6 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
         }
     }
 }
-
 int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_child){
     // ========================
     //  WARN FIXME leads to inaccuracy if the coordinates are large! This system uses absolute coordinates!
@@ -69,6 +68,7 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
             }
         }
     }
+    return 0;
     
 }
 
@@ -96,8 +96,12 @@ int tree_splitNode(objTree* tree, treeNode* node){
         currentNode = currentNode->up;
     }
     if(nodeDepth == tree->depth){
-        //big boom bad sad
-        return 1;
+        tree->depth++;
+        currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
+        currentNode->right = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
+        tree_balanceBuffers(currentNode, currentNode->left, currentNode->right);
+        tree_free(currentNode->buf);
+        return 0;
     }
     else{
         currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
