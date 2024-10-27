@@ -34,12 +34,43 @@ Traverses from the top of the tree - when it's shallower than 8 levels,
 its beter than the deep version.
 Query is not required, its just for compatibility with 
 */
+void hit_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12], unsigned* numWritten){
+    if(!node->buf){
+        if(node->split.isx) {
+            if(rect.offset.x + rect.extent.width < node->split.value){
+                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
+            }
+            else if (rect.offset.x + rect.extent.width >= node->split.value && rect.offset.x <= node->split.value){
+                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
+                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+            }
+            else {
+                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+            }
+        }
+        else {
+            if(rect.offset.y + rect.extent.height < node->split.value){
+                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
+            }
+            else if (rect.offset.y + rect.extent.height >= node->split.value && rect.offset.y <= node->split.value){
+                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
+                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+            }
+            else {
+                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+            }
+        }
+    }
+    else {
+        results[*numWritten] = node->buf;
+        *numWritten += 1;
+    }
+}
+//runner function
 int hit_findRect_shallow(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12]){
     unsigned numWritten = 0;
-    
-}
-int hit_findRect_shallow_aux(treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12]){
-    
+    hit_findRect_shallow_aux(tree, node, rect, results, &numWritten);
+    return numWritten;
 }
 /*
 Return all the buffers containing the area specified by `rect`.
