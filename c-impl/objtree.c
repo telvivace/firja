@@ -1,4 +1,21 @@
 #include "objtree.h"
+objTree* tree_initTree(){
+    tree_allocPool* pool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
+    objTree* pMetadataStruct = tree_allocate(pool, sizeof(objTree));
+    treeNode* searchbuf = tree_allocate(pool, SEARCHBUFSIZE*sizeof(treeNode*));
+    treeNode* pRoot = tree_allocate(pool, sizeof(treeNode));
+    treeNode* rootbuf = tree_allocate(pool, sizeof(treeNode)*OBJBUFSIZE);
+    *pRoot = (treeNode){
+        .buf = rootbuf
+    };
+    *pMetadataStruct = (objTree){
+        .allocPool = pool,
+        .searchbuf = searchbuf,
+        .searchbufsize = SEARCHBUFSIZE,
+        .root = pRoot
+    };
+    return pMetadataStruct;
+}
 treeNode* tree_findParentNode(objTree* tree, object* obj){
     treeNode* currentNode = tree->root;
     while(1) {
