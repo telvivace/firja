@@ -30,9 +30,17 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
     //  kinda okay if we keep the numbers low
     // ========================
     double accumulator = 0;
-    for(unsigned i = 0; i < OBJBUFSIZE; i++){
-        accumulator += parent->buf[i].x; 
-    };
+    if(parent->split.isx){
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            accumulator += parent->buf[i].x; 
+        };
+    }
+    else{
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            accumulator += parent->buf[i].y; 
+        };
+    }
+    
     double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
     unsigned leftcount = 0; //how many objects in given child buffer
     unsigned rightcount = 0;
@@ -43,12 +51,12 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
         for(unsigned i = 0; i < OBJBUFSIZE; i++){
             if(parent->buf[i].x < average){
                 memcpy(left_child->buf + leftcount, parent->buf + i, sizeof(object));
-                left_child->places &= ~(1 << leftcount);
+                left_child->places &= ~(1UL << leftcount);
                 leftcount++;
             }
             else{
                 memcpy(right_child->buf + rightcount, parent->buf + i, sizeof(object));
-                right_child->places &= ~(1 << rightcount);
+                right_child->places &= ~(1UL << rightcount);
                 rightcount++;
             }
         }
@@ -57,13 +65,13 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
         for(unsigned i = 0; i < OBJBUFSIZE; i++){
             if(parent->buf[i].y < average){
                 memcpy(left_child->buf + leftcount, parent->buf + i, sizeof(object));
-                left_child->places &= ~(1 << leftcount);
+                left_child->places &= ~(1UL << leftcount);
                 leftcount++;
 
             }
             else{
                 memcpy(right_child->buf + rightcount, parent->buf + i, sizeof(object));
-                right_child->places &= ~(1 << rightcount);
+                right_child->places &= ~(1UL << rightcount);
                 rightcount++;
             }
         }
@@ -76,15 +84,25 @@ int tree_insertObject(objTree* tree, object* obj){
     treeNode* parentNode = tree_findParentNode(tree, obj);
     if(!parentNode->places) {
         if(tree_splitNode(tree, parentNode) != 0) return 1; //buffer is full
-        parentNode = parentNode->split.isx ? 
-            obj->x < parentNode->split.value ? 
-                parentNode->left : parentNode ->right
-        :
-            obj->y < parentNode->split.value? 
-                parentNode->left : parentNode ->right;
+        if(parentNode->split.isx){
+            if(obj->x < parentNode->split.value){
+                parentNode = parentNode->left;
+            }
+            else {
+                parentNode = parentNode->right;
+            }
+        } 
+        else {
+            if(obj->y < parentNode->split.value){
+                parentNode = parentNode->left;
+            }
+            else {
+                parentNode = parentNode->right;
+            }
+        }
     }
-    memcpy(parentNode->buf + __builtin_ctzll(parentNode->places), obj, sizeof(object));
-    parentNode->places &= ~(1 << __builtin_ctzll(parentNode->places)); //set the bit to 0
+    memcpy(parentNode->buf + __builtin_ctzl(parentNode->places), obj, sizeof(object));
+    parentNode->places &= ~(1 << __builtin_ctzl(parentNode->places)); //set the bit to 0
     return 0;
 }
 
@@ -97,17 +115,10 @@ int tree_splitNode(objTree* tree, treeNode* node){
     }
     if(nodeDepth == tree->depth){
         tree->depth++;
-        currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
-        currentNode->right = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
-        tree_balanceBuffers(currentNode, currentNode->left, currentNode->right);
-        tree_free(currentNode->buf);
-        return 0;
     }
-    else{
-        currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
-        currentNode->right = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
-        tree_balanceBuffers(currentNode, currentNode->left, currentNode->right);
-        tree_free(currentNode->buf);
-        return 0;
-    }
+    currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
+    currentNode->right = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
+    tree_balanceBuffers(currentNode, currentNode->left, currentNode->right);
+    tree_free(currentNode->buf);
+    return 0;
 }

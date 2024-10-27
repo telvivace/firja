@@ -1,6 +1,6 @@
 #ifndef OBJTREE_H
 #define OBJTREE_H
-#define OBJBUFSIZE 16
+#define OBJBUFSIZE 16 //max 64 elements, governed by implementation
 #define MAXOBJSIZE 20
 #include <ctype.h>
 #include <string.h>
