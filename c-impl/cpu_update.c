@@ -43,7 +43,3 @@ int scalar_update(object** arr, unsigned size){
     }
     return 0;
 }
-
-int main(void){
-    
-}
