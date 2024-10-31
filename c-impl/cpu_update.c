@@ -2,34 +2,30 @@
 #include <stdio.h>
 #include "cpu_update.h"
 //hacky ass box so that things are cool
-#define LEFTBORDER -100
-#define RIGHTBORDER 100
-#define TOPBORDER 100
-#define BOTTOMBORDER -100
-int vector_update(object** arr, unsigned size){
-    for(unsigned i = 0; i < size; i++){
-        for(unsigned j = 0; j < OBJBUFSIZE; j++){
-            object* obj = arr[i] + j;
-            if(obj->hit) {
-                speed v_cm = {
-                    .x = (obj->m * obj->v.x + obj->hit->m * obj->hit->v.x)/(obj->m + obj->hit->m),
-                    .y = (obj->m * obj->v.y + obj->hit->m * obj->hit->v.y)/(obj->m + obj->hit->m)
-                };
-                obj->v = (speed){
-                    .x = (obj->v.x - v_cm.x)*-1 + v_cm.x,
-                    .y = (obj->v.y - v_cm.y)*-1 + v_cm.y,
-                };
-                obj->hit->v = (speed){
-                    .x = (obj->hit->v.x - v_cm.x)*-1 + v_cm.x,
-                    .y = (obj->hit->v.y - v_cm.y)*-1 + v_cm.y,
-                };
-                //TODO WARN naive?
-                obj->hit->hit = 0;
-                obj->hit = 0;
-            }
-            if(obj->x > RIGHTBORDER || obj->x < LEFTBORDER) obj->v.x *= -1;
-            if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
+
+int vector_update(object** arr, unsigned bufcount){
+    for(unsigned i = 0; i < bufcount*OBJBUFSIZE; i++){
+        object* obj = arr + i;
+        if(!obj) continue;
+        if(obj->hit) {
+            speed v_cm = {
+                .x = (obj->m * obj->v.x + obj->hit->m * obj->hit->v.x)/(obj->m + obj->hit->m),
+                .y = (obj->m * obj->v.y + obj->hit->m * obj->hit->v.y)/(obj->m + obj->hit->m)
+            };
+            obj->v = (speed){
+                .x = (obj->v.x - v_cm.x)*-1 + v_cm.x,
+                .y = (obj->v.y - v_cm.y)*-1 + v_cm.y,
+            };
+            obj->hit->v = (speed){
+                .x = (obj->hit->v.x - v_cm.x)*-1 + v_cm.x,
+                .y = (obj->hit->v.y - v_cm.y)*-1 + v_cm.y,
+            };
+            //TODO WARN naive?
+            obj->hit->hit = 0;
+            obj->hit = 0;
         }
+        if(obj->x > RIGHTBORDER || obj->x < LEFTBORDER) obj->v.x *= -1;
+        if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
     }
     return 0;
 }

@@ -1,12 +1,25 @@
-STD = -std=c2x
-#OPT = -O3
-OPT= -g
-CFLAGS= -Wall ${STD} ${OPT}
+# Compiler and flags
+CC = gcc
+CFLAGS = -std=c2x -Wall -g
+LDFLAGS = -lm
+# Executable and source files
+TARGET = main
+SRC = main.c cpu_update.c hit_detect.c objtree.c tree_alloc.c
+OBJ = $(SRC:.c=.o)
 
-phyeng: main.o
+# Default target
+all: $(TARGET)
 
-main.o: hit_detect.o cpu_update.o
+# Link object files to create the executable
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ) $(LDFLAGS)
 
-cpu_update.o: objtree.o tree_alloc.o
+# Compile source files into object files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-ALL: phyeng
+# Clean up object files and executable
+#clean:
+#	rm -f $(OBJ) $(TARGET)
+
+#.PHONY: ./main

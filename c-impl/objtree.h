@@ -1,6 +1,7 @@
 #ifndef OBJTREE_H
 #define OBJTREE_H
 #define OBJBUFSIZE 16 //max 64 elements, governed by implementation
+#define OBJBUFFULLMASK 65535 //2^(OBJBUFSIZE)-1
 #define MAXOBJSIZE 20
 #define SEARCHBUFSIZE 40
 #include <ctype.h>
@@ -54,20 +55,21 @@ typedef struct treeNode treeNode;
 struct objTree {
     unsigned depth;
     unsigned searchbufsize;
-    tree_allocPool* allocPool;
+    tree_allocPool* objectAllocPool;
+    tree_allocPool* nodeAllocPool;
     treeNode* root;
     treeNode** searchbuf;
+    unsigned bufCount;
 };
 typedef struct objTree objTree;
-
+/*
+Initializes the k/d tree.
+*/
+objTree* tree_initTree(void);
 /*
 Traverses the BSP tree and gives the address of the node containing the object we need
 */
 treeNode* tree_findParentNode(objTree* tree, object* obj);
-/*
-Finds a vacant place in the object buffer of a leaf node. May split the buffer if required.
-*/
-int tree_insertObject_s(objTree* tree, object* obj);
 /*
 Finds a vacant place in the object buffer of a leaf node. Returns an error if the buffer is full.
 */

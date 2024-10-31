@@ -1,15 +1,18 @@
 #include "objtree.h"
 objTree* tree_initTree(){
-    tree_allocPool* pool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
-    objTree* pMetadataStruct = tree_allocate(pool, sizeof(objTree));
-    treeNode* searchbuf = tree_allocate(pool, SEARCHBUFSIZE*sizeof(treeNode*));
-    treeNode* pRoot = tree_allocate(pool, sizeof(treeNode));
-    treeNode* rootbuf = tree_allocate(pool, sizeof(treeNode)*OBJBUFSIZE);
+    tree_allocPool* objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
+    tree_allocPool* nodepool = tree_allocInitPool(1 * 1e3); //one million (1 kB)
+    objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
+    treeNode** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(treeNode*));
+    treeNode* pRoot = tree_allocate(nodepool, sizeof(treeNode));
+    object* rootbuf = tree_allocate(nodepool, sizeof(treeNode)*OBJBUFSIZE);
     *pRoot = (treeNode){
-        .buf = rootbuf
+        .buf = rootbuf,
+        .places = ~0UL,
     };
     *pMetadataStruct = (objTree){
-        .allocPool = pool,
+        .objectAllocPool = objectpool,
+        .nodeAllocPool = nodepool,
         .searchbuf = searchbuf,
         .searchbufsize = SEARCHBUFSIZE,
         .root = pRoot
@@ -57,7 +60,7 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
             accumulator += parent->buf[i].y; 
         };
     }
-    
+    printf("added up all the coordinates\n");
     double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
     unsigned leftcount = 0; //how many objects in given child buffer
     unsigned rightcount = 0;
@@ -98,9 +101,14 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
 }
 
 int tree_insertObject(objTree* tree, object* obj){
+    printf("searching for a parent node\n");
     treeNode* parentNode = tree_findParentNode(tree, obj);
-    if(!parentNode->places) {
-        if(tree_splitNode(tree, parentNode) != 0) return 1; //buffer is full
+    printf("found a parent node\n");
+    printf("places: %lx\n", parentNode->places);
+    printf("comparison: %x\n", OBJBUFFULLMASK);
+    if(!(OBJBUFFULLMASK & parentNode->places)) { //buffer is full
+        printf("splitting a node\n");
+        if(tree_splitNode(tree, parentNode) != 0) return 1; 
         if(parentNode->split.isx){
             if(obj->x < parentNode->split.value){
                 parentNode = parentNode->left;
@@ -133,9 +141,33 @@ int tree_splitNode(objTree* tree, treeNode* node){
     if(nodeDepth == tree->depth){
         tree->depth++;
     }
-    currentNode->left = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
-    currentNode->right = tree_allocate(tree->allocPool, sizeof(object)*OBJBUFSIZE);
+    printf("%p %ld\n", currentNode, currentNode->split.isx);
+    printf("got through ascent phase\n");
+    if(currentNode->up){
+        if(!currentNode->up->split.isx) currentNode->split.isx = 1;
+    }
+    else currentNode->split.isx = 1;
+    
+    printf("checked for axis of split");
+    currentNode->left = tree_allocate(tree->objectAllocPool, sizeof(treeNode));
+    currentNode->right = tree_allocate(tree->objectAllocPool, sizeof(treeNode));
+    fprintf(stderr, "allocated nodes\n");
+    currentNode->left->buf = tree_allocate(tree->nodeAllocPool, sizeof(object)*OBJBUFSIZE);
+    currentNode->right->buf = tree_allocate(tree->nodeAllocPool, sizeof(object)*OBJBUFSIZE);    
+    fprintf(stderr, "allocated buffers\n");
     tree_balanceBuffers(currentNode, currentNode->left, currentNode->right);
     tree_free(currentNode->buf);
+    tree->bufCount++;
     return 0;
 }
+/*
+111111111100000000000 - places
+&
+000000000011111111111 - mask
+
+000000000000000000000
+
+
+[****|**--|**--|--------------------------------]
+
+*/
