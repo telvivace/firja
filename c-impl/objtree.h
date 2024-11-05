@@ -6,6 +6,7 @@
 #define SEARCHBUFSIZE 40
 #include <ctype.h>
 #include <string.h>
+#include <stddef.h>
 #include "tree_alloc.h"
 typedef struct {
     float x;
@@ -48,7 +49,7 @@ struct treeNode {
     struct treeSplit split;
     struct treeNode* up;
     object* buf; //if not null, its a leaf!
-    __uint64_t places; //which places in the buffer are vacant?
+    __uint64_t places; //bitmask: vacant place = 1, filled = 0, start at right
 };
 typedef struct treeNode treeNode;
 

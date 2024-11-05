@@ -9,7 +9,7 @@ int main(){
     globalInfo->tree = tree_initTree();
     printf("start loop\n");
     for(unsigned i = 0; i < 40; i++){
-        fprintf(stderr, "iteration %d\n", i+1);
+        fprintf(stderr, "iteration %d\n", i);
         tree_insertObject(globalInfo->tree, &(object){.m = 5, .s = 5, .x = 100/40*i, .y = sin(100/40*i), .v = (speed){.x = i/100, .y = -i/100}});
         globalInfo->objectCount++;
     }

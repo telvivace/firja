@@ -6,6 +6,7 @@
 typedef struct {
     objTree* tree;
     unsigned long objectCount;
+    unsigned bufferCount;
 } globalInfo;
 
 #endif
