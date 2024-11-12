@@ -35,7 +35,7 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
                     currentNode = currentNode->right;
                 }
                 break;
-            case 2:
+            case 0:
                 if(obj->y < currentNode->split.value){
                     printf("descend left\n");
                     currentNode = currentNode->left;
