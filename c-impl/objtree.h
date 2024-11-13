@@ -68,6 +68,10 @@ Initializes the k/d tree.
 */
 objTree* tree_initTree(void);
 /*
+Destroys the k/d tree.
+*/
+void tree_deleteTree(objTree* tree);
+/*
 Traverses the BSP tree and gives the address of the node containing the object we need
 */
 treeNode* tree_findParentNode(objTree* tree, object* obj);

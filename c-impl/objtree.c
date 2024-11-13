@@ -1,24 +1,37 @@
 #include "objtree.h"
 objTree* tree_initTree(){
+    printf("init pool 1\n");
     tree_allocPool* objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
-    tree_allocPool* nodepool = tree_allocInitPool(1 * 1e3); //one million (1 kB)
+    printf("init pool 2\n");
+    tree_allocPool* nodepool = tree_allocInitPool(1 * 1e3); //one thousand (1 kB)
+    printf("alloc metadata\n");
     objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
+    printf("alloc searchbuf\n");
     treeNode** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(treeNode*));
+    printf("alloc root node\n");
     treeNode* pRoot = tree_allocate(nodepool, sizeof(treeNode));
-    object* rootbuf = tree_allocate(nodepool, sizeof(treeNode)*OBJBUFSIZE);
+    printf("alloc rootnodebuf\n");
+    object* rootbuf = tree_allocate(objectpool, sizeof(treeNode)*OBJBUFSIZE);
     *pRoot = (treeNode){
         .buf = rootbuf,
         .places = ~0UL,
         .split.isx = 1,
     };
     *pMetadataStruct = (objTree){
-        .objectAllocPool = objectpool,
-        .nodeAllocPool = nodepool,
         .searchbuf = searchbuf,
         .searchbufsize = SEARCHBUFSIZE,
         .root = pRoot
     };
+    pMetadataStruct->objectAllocPool = objectpool;
+    pMetadataStruct->nodeAllocPool = nodepool;
     return pMetadataStruct;
+}
+void tree_deleteTree(objTree* tree){
+    printf("delet pool 2\n");   
+    tree_allocDestroyPool(tree->objectAllocPool);
+    printf("delet pool 1\n");
+    tree_allocDestroyPool(tree->nodeAllocPool);
+
 }
 treeNode* tree_findParentNode(objTree* tree, object* obj){
     treeNode* currentNode = tree->root;
