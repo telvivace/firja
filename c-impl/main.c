@@ -4,7 +4,7 @@
 #define ever ;;
 int main(){
     printf("start of main\n");
-    globalInfo* globalInfo = calloc(sizeof(globalInfo), 1);
+    globalInfo* globalInfo = calloc(1, sizeof(globalInfo));
     printf("init tree\n");
     globalInfo->tree = tree_initTree();
     printf("start loop\n");

@@ -2,10 +2,8 @@
 
 tree_allocPool* tree_allocInitPool(size_t size){
     tree_allocPool* retPtr = calloc(sizeof(tree_allocPool), 1);
-    *retPtr = (tree_allocPool){
-        .pStart = malloc(size),
-        .allocated = size,
-    };
+    retPtr->pStart = calloc(1, size),
+    retPtr->allocated = size;
     return retPtr;
 }
 void tree_allocDestroyPool(tree_allocPool* pool){
