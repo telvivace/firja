@@ -3,11 +3,12 @@
 #include "cpu_update.h"
 //hacky ass box so that things are cool
 
-int vector_update(object** arr, unsigned bufcount){
+int vector_update(object* arr, unsigned bufcount){
     for(unsigned i = 0; i < bufcount*OBJBUFSIZE; i++){
         object* obj = arr + i;
         if(!obj) continue;
         if(obj->hit) {
+            printf("checking %dth object\n", i);
             speed v_cm = {
                 .x = (obj->m * obj->v.x + obj->hit->m * obj->hit->v.x)/(obj->m + obj->hit->m),
                 .y = (obj->m * obj->v.y + obj->hit->m * obj->hit->v.y)/(obj->m + obj->hit->m)

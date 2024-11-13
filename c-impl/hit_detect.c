@@ -66,6 +66,7 @@ static int hit_flagObjects_aux(treeNode* node){
         printf("descending from node %p down into %p (left) and %p (right)\n", node, node->left, node->right);
         hit_flagObjects_aux(node->left);
         hit_flagObjects_aux(node->right);
+        return 0;
     }
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         printf("Structure no. %d has fields:\n"\
@@ -97,5 +98,8 @@ static int hit_flagObjects_aux(treeNode* node){
 }
 //runner function
 int hit_flagObjects(objTree* tree){
-    return hit_flagObjects_aux(tree->root);
+    printf("==============\nhit_flagObjects\n");
+    hit_flagObjects_aux(tree->root);
+    printf("aux returned, returning\n");
+    return 0;
 }
