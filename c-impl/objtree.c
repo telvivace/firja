@@ -123,13 +123,16 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
 this function expects that the buffers of the parent and exactly one child are identical in order to save space.
 */
 int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right_child){
-    object* dest = (void*)0;
+    treeNode* dest = (void*)0;
+    treeNode* other = (void*)0;
     if(parent->buf == left_child->buf){ 
-        dest = right_child->buf;
+        dest = right_child;
+        other = left_child;
         printf("left child buf == parent buf \n");
     }
     else{
-        dest = left_child->buf;
+        dest = left_child;
+        other = right_child;
         printf("right child buf == parent buf \n");
     }  
     printf("==================\ntree_balanceBuffers2:\n");
@@ -168,12 +171,21 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
             average
         );
         //first value is the x or y field of the i-th struct in buf
-        if(*(double*)( (char*)&(parent->buf[i]) + coordoffset ) > average){ 
-            memcpy(dest + destwritten, parent->buf + i, sizeof(object));
-            memset(parent->buf + i, '\0', sizeof(object));      //wipe the object
-            parent->places |= 1UL << i;                         //mark as vacant
+        if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > average){
+            printf("moving object %i to new node\n", i);
+            memcpy(dest->buf + destwritten, parent->buf + i, sizeof(object));
+            memset(parent->buf + i, '\0', sizeof(object));      //wipe the object (old reused buffer)
+            parent->places |= 1UL << i;                         //mark as vacant (old reused buffer)
+            printf("doing paperwork\n");
+            dest->places &= ~(1UL << destwritten);              //mark as occupied (new buffer)
+        }
+        else{
+            printf("object %d remains where it was\n", i);
         }
     }
+    other->places = parent->places;
+    parent->places = ~0UL;
+    return 0;
 }
 
 
