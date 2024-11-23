@@ -10,7 +10,7 @@ objTree* tree_initTree(){
     treeNode** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(treeNode*));
     printf("alloc root node\n");
     treeNode* pRoot = tree_allocate(nodepool, sizeof(treeNode));
-    printf("alloc rootnodebuf\n");
+    printf("alloc root node buf\n");
     object* rootbuf = tree_allocate(objectpool, sizeof(treeNode)*OBJBUFSIZE);
     *pRoot = (treeNode){
         .buf = rootbuf,
@@ -20,7 +20,8 @@ objTree* tree_initTree(){
     *pMetadataStruct = (objTree){
         .searchbuf = searchbuf,
         .searchbufsize = SEARCHBUFSIZE,
-        .root = pRoot
+        .root = pRoot,
+        .bufCount = 1, //root node
     };
     pMetadataStruct->objectAllocPool = objectpool;
     pMetadataStruct->nodeAllocPool = nodepool;
@@ -217,7 +218,7 @@ int tree_insertObject(objTree* tree, object* obj){
         }
     }
     memcpy(parentNode->buf + __builtin_ctzl(parentNode->places), obj, sizeof(object));
-    parentNode->places &= ~(1 << __builtin_ctzl(parentNode->places)); //set the bit to 0
+    parentNode->places &= ~(1 << __builtin_ctzl(parentNode->places)); //mark as occupied
     return 0;
 }
 
@@ -255,6 +256,56 @@ int tree_splitNode(objTree* tree, treeNode* node){
     tree->bufCount++;
     return 0;
 }
+//from GFG count set bits in integer
+unsigned countSetBitsUL(unsigned long N)
+{
+    unsigned count = 0;
+   
+    for (unsigned i = 0; i < sizeof(unsigned long) * 8; i++) {
+        if (N & (1UL << i))
+            count++;
+    }
+    return count;
+}
+
+static int tree_printTree_aux(treeNode* node, FILE* file){
+    if(node->buf){
+        printf("on places : %lx we get %d\n", node->places, 64 - countSetBitsUL(node->places));
+        fprintf(file, "\nchild {node {%d}}", 64 - countSetBitsUL(node->places));
+    }
+
+    else {
+        fprintf(file, "\nchild {node {0}");
+        printf("left\n");
+        tree_printTree_aux(node->left, file);
+        tree_printTree_aux(node->right, file);
+        fprintf(file, "}");
+    }
+    return 0;
+}
+int tree_printTree(objTree* tree){
+    FILE *file;
+    const char *filename = "nodetrees_auto.tex";
+    file = fopen(filename, "w");
+    if (file == (void*)0) {
+        perror("Error opening file");
+        return EXIT_FAILURE;
+    }
+    fprintf(file, "  \\usetikzlibrary{graphs,graphdrawing} \\usegdlibrary{trees} \\tikz [tree layout, grow'=right, level distance=11mm, sibling distance=3mm,nodes={draw,fill=cyan!40,circle,inner sep=1pt, scale=0.6}]");
+    if(tree->root->buf){
+        fprintf(file, "\\node {%d}", 64 - countSetBitsUL(tree->root->places));
+    }
+    else{
+    fprintf(file, "\\node {%d}", 64 - countSetBitsUL(tree->root->places));
+    tree_printTree_aux(tree->root->left, file);
+    tree_printTree_aux(tree->root->right, file);
+    }
+    
+    fprintf(file, ";\n");
+    fclose(file);
+    return 0;
+}
+
 /*
 111111111100000000000 - places
 &
