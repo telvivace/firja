@@ -226,8 +226,11 @@ int tree_splitNode(objTree* tree, treeNode* node){
     printf("node pointer: %p split coordinate: %c\n", node, node->split.isx ? 'x' : 'y');
     printf("got through ascent phase\n");
     if(node->up){
+        // if parent is y, then this is x.
+        // the opposite is guaranteed by calloc
         if(!node->up->split.isx) node->split.isx = 1;
     }
+    //the root is always x
     else node->split.isx = 1;
     
     printf("checked for axis of split. allocating nodes\n");
@@ -235,7 +238,7 @@ int tree_splitNode(objTree* tree, treeNode* node){
     node->right = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
     fprintf(stderr, "allocated nodes. allocating buffers\n");
     *(node->left) = (treeNode){
-        .buf = node->buf, //reuse parent buf. Only works w/ balamceBuffers2
+        .buf = node->buf, //reuse parent buf. Only works w/ balanceBuffers2
         .up = node,
         .places = ~0UL,
     };
@@ -244,10 +247,10 @@ int tree_splitNode(objTree* tree, treeNode* node){
         .up = node,
         .places = ~0UL,
     };
+    tree->bufCount++;
 
     fprintf(stderr, "allocated buffers\n");
     tree_balanceBuffers2(node, node->left, node->right);
-    tree_free(node->buf);
     node->buf = (void*)0;
     tree->bufCount++;
     return 0;
