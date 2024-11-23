@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stddef.h>
+
 #include "tree_alloc.h"
 typedef struct {
     float x;
@@ -84,5 +85,7 @@ Split a node along a x/y boundary. Might have optimizations laters
 */
 int tree_splitNode(objTree* tree, treeNode* node);
 
+int tree_printTree(objTree* tree);
 
+unsigned countSetBitsUL(unsigned long N);
 #endif
