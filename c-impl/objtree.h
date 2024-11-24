@@ -85,7 +85,4 @@ Split a node along a x/y boundary. Might have optimizations laters
 */
 int tree_splitNode(objTree* tree, treeNode* node);
 
-int tree_printTree(objTree* tree);
-
-unsigned countSetBitsUL(unsigned long N);
 #endif
