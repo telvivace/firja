@@ -1,1 +1,7 @@
 *.o
+main
+*grind*
+*heaptrack*
+tests
+*.json
+logo.png
