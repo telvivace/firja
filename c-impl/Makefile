@@ -4,7 +4,7 @@ CFLAGS = -std=c2x -Wall -g
 LDFLAGS = -lm
 # Executable and source files
 TARGET = main
-SRC =  cpu_update.c hit_detect.c objtree.c tree_alloc.c
+SRC =  cpu_update.c hit_detect.c objtree.c tree_alloc.c treeutils.c
 MAINSRC = main.c
 MAINOBJ = $(MAINSRC:.c=.o)
 OBJ = $(SRC:.c=.o)
