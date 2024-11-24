@@ -1,4 +1,6 @@
 #include "objtree.h"
+#include <stdio.h>
+#include <string.h>
 objTree* tree_initTree(){
     printf("init pool 1\n");
     tree_allocPool* objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)

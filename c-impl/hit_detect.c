@@ -1,5 +1,6 @@
 #include "hit_detect.h"
 #include <tgmath.h>
+#include <stdio.h>
 #define SQUARE(x) ((x)*(x))
 
 /*

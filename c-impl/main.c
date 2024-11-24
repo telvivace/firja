@@ -1,6 +1,13 @@
 #include "generaldefs.h"
+#include "hit_detect.h"
+#include "cpu_update.h"
+#include "treeutils.h"
+#include <stdio.h>
+#include <time.h>
 #include <tgmath.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #define ever ;;
 int main(int argc, char* argv[static 1]){
     int numObjects = 40;

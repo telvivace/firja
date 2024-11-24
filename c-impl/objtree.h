@@ -4,11 +4,8 @@
 #define OBJBUFFULLMASK 65535 //2^(OBJBUFSIZE)-1
 #define MAXOBJSIZE 20
 #define SEARCHBUFSIZE 40
-#include <ctype.h>
-#include <string.h>
-#include <stddef.h>
-
 #include "tree_alloc.h"
+#include <stdint.h>
 typedef struct {
     float x;
     float y;
@@ -50,7 +47,7 @@ struct treeNode {
     struct treeSplit split;
     struct treeNode* up;
     object* buf; //if not null, its a leaf!
-    __uint64_t places; //bitmask: vacant place = 1, filled = 0, start at right
+    uint64_t places; //bitmask: vacant place = 1, filled = 0, start at right
 };
 typedef struct treeNode treeNode;
 
@@ -81,7 +78,7 @@ Finds a vacant place in the object buffer of a leaf node. Returns an error if th
 */
 int tree_insertObject(objTree* tree, object* obj);
 /*
-Split a node along a x/y boundary. Might have optimizations laters
+Split a node along a x/y boundary.
 */
 int tree_splitNode(objTree* tree, treeNode* node);
 

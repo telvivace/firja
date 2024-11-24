@@ -1,5 +1,5 @@
 #include "tree_alloc.h"
-
+#include <stdlib.h>
 tree_allocPool* tree_allocInitPool(size_t size){
     tree_allocPool* retPtr = calloc(sizeof(tree_allocPool), 1);
     retPtr->pStart = calloc(1, size),

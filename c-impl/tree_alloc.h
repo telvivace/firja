@@ -1,10 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
-/*
-DO NOT INCLUDE BY ITSELF PLEASE
-*/
+#include <stddef.h>
 typedef struct tree_allocPool tree_allocPool;
 
 struct tree_allocPool{
