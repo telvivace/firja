@@ -1,6 +1,7 @@
 #include "objtree.h"
 #include <stdio.h>
 #include <string.h>
+#include "settings.h"
 objTree* tree_initTree(){
     printf("init pool 1\n");
     tree_allocPool* objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
@@ -18,6 +19,10 @@ objTree* tree_initTree(){
         .buf = rootbuf,
         .places = ~0UL,
         .split.isx = 1,
+        .bindrect = (rect_llhh){
+            .lowlow = (point){.x = LEFTBORDER, .y = BOTTOMBORDER},
+            .highhigh = (point){.x = RIGHTBORDER, .y = TOPBORDER}
+        }
     };
     *pMetadataStruct = (objTree){
         .searchbuf = searchbuf,
@@ -244,11 +249,25 @@ int tree_splitNode(objTree* tree, treeNode* node){
         .buf = node->buf, //reuse parent buf. Only works w/ balanceBuffers2
         .up = node,
         .places = ~0UL,
+        .bindrect = (rect_llhh){
+            .lowlow = node->bindrect.lowlow,
+            .highhigh = node->split.isx ? 
+                (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
+                :
+                (point){ .x = node->bindrect.highhigh.x, .y = node->split.value}
+        }
     };
     *(node->right) = (treeNode){
         .buf = tree_allocate(tree->objectAllocPool, sizeof(object)*OBJBUFSIZE),
         .up = node,
         .places = ~0UL,
+        .bindrect = (rect_llhh){
+            .lowlow = node->split.isx ? 
+                (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
+                :
+                (point){ .x = node->bindrect.highhigh.x, .y = node->split.value},
+            .highhigh = node->bindrect.highhigh
+        }
     };
     tree->bufCount++;
 

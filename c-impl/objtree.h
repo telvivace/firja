@@ -48,6 +48,7 @@ struct treeNode {
     struct treeNode* up;
     object* buf; //if not null, its a leaf!
     uint64_t places; //bitmask: vacant place = 1, filled = 0, start at right
+    rect_llhh bindrect;
 };
 typedef struct treeNode treeNode;
 
