@@ -3,14 +3,7 @@
 #include <stdio.h>
 #define SQUARE(x) ((x)*(x))
 
-/*
-Return all the buffers containing the area specified by `rect`.
-Expects you to provide a buffer of at least 12 * sizeof(object*)
-Returns the number of buffers found. The number ranges from 0 to 12.
-Traverses from the top of the tree - when it's shallower than 8 levels,
-its beter than the deep version.
-Query is not required, its just for compatibility with 
-*/
+//documentation in the runner function below
 static void hit_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12], unsigned* numWritten){
     if(!node->buf){
         if(node->split.isx) {
@@ -43,12 +36,20 @@ static void hit_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__
         *numWritten += 1;
     }
 }
-//runner function
+/*
+Return all the buffers containing the area specified by `rect`.
+Expects you to provide a buffer of at least 12 * `sizeof(object*)`
+Returns the number of buffers found. The number ranges from 0 to 12.
+Traverses from the top of the tree - when it's shallower than 8 levels,
+its beter than the deep version.
+`node` is not required, its just for compatibility with the deep version
+*/
 int hit_findRect_shallow(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12]){
     unsigned numWritten = 0;
     hit_findRect_shallow_aux(tree, node, rect, results, &numWritten);
     return numWritten;
 }
+
 /*
 Return all the buffers containing the area specified by `rect`.
 Expects you to provide a buffer of at least 12 * sizeof(object*)
