@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "cpu_update.h"
-//hacky ass box so that things are cool
+#include "objtree.h"
+#include "settings.h"
 
 int vector_update(object* arr, unsigned bufcount){
     for(unsigned i = 0; i < bufcount*OBJBUFSIZE; i++){
@@ -25,6 +26,7 @@ int vector_update(object* arr, unsigned bufcount){
             obj->hit->hit = 0;
             obj->hit = 0;
         }
+        //hardcoded borders of a box so that things don't just fly apart
         if(obj->x > RIGHTBORDER || obj->x < LEFTBORDER) obj->v.x *= -1;
         if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
     }
