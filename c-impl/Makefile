@@ -29,7 +29,7 @@ $(TESTS): $(OBJ) $(TESTSRC)
 	$(CC) $(CFLAGS) -o $(TESTS) $(TESTSRC) $(OBJ) $(LDFLAGS)
 
 # Link object files to create the executable
-$(TARGET): $(OBJ) $(TARGETSRC)
+$(TARGET): $(OBJ) $(SRC) $(MAINSRC)
 	$(CC) $(CFLAGS) -o $(TARGET) $(MAINSRC) $(OBJ) $(LDFLAGS)
 
 # Compile source files into object files
