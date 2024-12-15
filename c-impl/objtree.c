@@ -4,9 +4,9 @@
 #include "settings.h"
 objTree* tree_initTree(){
     printf("init pool 1\n");
-    tree_allocPool* objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
+    tree_allocPool objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
     printf("init pool 2\n");
-    tree_allocPool* nodepool = tree_allocInitPool(1 * 1e3); //one thousand (1 kB)
+    tree_allocPool nodepool = tree_allocInitPool(1 * 1e3); //one thousand (1 kB)
     printf("alloc metadata\n");
     objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
     printf("alloc searchbuf\n");

@@ -47,7 +47,7 @@ struct treeNode {
     struct treeSplit split;
     struct treeNode* up;
     object* buf; //if not null, its a leaf!
-    uint64_t places; //bitmask: vacant place = 1, filled = 0, start at right
+    uint64_t places; //bitmask: vacant place = 1, filled = 0, start at least significant
     rect_llhh bindrect;
 };
 typedef struct treeNode treeNode;
@@ -55,8 +55,8 @@ typedef struct treeNode treeNode;
 struct objTree {
     unsigned depth;
     unsigned searchbufsize;
-    tree_allocPool* objectAllocPool;
-    tree_allocPool* nodeAllocPool;
+    tree_allocPool objectAllocPool;
+    tree_allocPool nodeAllocPool;
     treeNode* root;
     treeNode** searchbuf;
     unsigned bufCount;
