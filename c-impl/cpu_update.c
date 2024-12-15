@@ -4,12 +4,14 @@
 #include "objtree.h"
 #include "settings.h"
 
-int vector_update(object* arr, unsigned bufcount){
-    for(unsigned i = 0; i < bufcount*OBJBUFSIZE; i++){
-        object* obj = arr + i;
-        if(!obj) continue;
+int vector_update_aux(treeNode* node){
+    if(!node->buf){
+        vector_update_aux(node->left);
+        vector_update_aux(node->right);
+    }
+    for(unsigned i = 0; i < OBJBUFSIZE; i++){
+        object* obj = node->buf + i;
         if(obj->hit) {
-            printf("checking %dth object\n", i);
             speed v_cm = {
                 .x = (obj->m * obj->v.x + obj->hit->m * obj->hit->v.x)/(obj->m + obj->hit->m),
                 .y = (obj->m * obj->v.y + obj->hit->m * obj->hit->v.y)/(obj->m + obj->hit->m)
@@ -32,13 +34,18 @@ int vector_update(object* arr, unsigned bufcount){
     }
     return 0;
 }
-int scalar_update(object** arr, unsigned size){
-    for(unsigned i = 0; i < size; i++){
-        for(unsigned j = 0; j < OBJBUFSIZE; j++){
-            object* obj = arr[i] + j;
-            obj->x += obj->v.x;
-            obj->y += obj->v.y;
-        }
+int vector_update(objTree* tree){
+    return vector_update_aux(tree->root);
+}
+
+int scalar_update_aux(treeNode* node){
+    for(unsigned i = 0; i < OBJBUFSIZE; i++){
+        object* obj = node->buf + i;
+        obj->x += obj->v.x;
+        obj->y += obj->v.y;
     }
     return 0;
+}
+int scalar_update(objTree* tree){
+    return scalar_update_aux(tree->root);
 }

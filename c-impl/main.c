@@ -42,8 +42,8 @@ int main(int argc, char* argv[static 1]){
     timespec_get(&starttime, TIME_UTC);
     for(ever){
         hit_flagObjects(globalInfo->tree);
-        vector_update(globalInfo->tree->objectAllocPool->pStart, globalInfo->bufferCount);
-        scalar_update(globalInfo->tree->objectAllocPool->pStart, globalInfo->bufferCount);
+        vector_update(globalInfo->tree);
+        scalar_update(globalInfo->tree);
         cycles++;
         if(cycles > 1000) break;
     }
