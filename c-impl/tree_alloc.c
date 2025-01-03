@@ -12,7 +12,7 @@ struct tree_allocSubpool{
     size_t used;
 };
 tree_allocPool tree_allocInitPool(size_t size){
-    tree_allocPool retPtr = calloc(sizeof(tree_allocPool), 1);
+    tree_allocPool retPtr = calloc(sizeof(struct tree_allocPool_s), 1);
     retPtr->subpools[0] = calloc(sizeof(tree_allocSubpool), 1);
     retPtr->subpools[0]->pStart = calloc(1, size),
     retPtr->subpools[0]->allocated = size;
