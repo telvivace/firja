@@ -8,8 +8,16 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #define ever ;;
+volatile unsigned long frames = 0; //for diagnostic purposes
+void printFramesAtSegfault(int signal){
+    printf("Frames rendered: %ld\n", frames);
+    printf("SEGMENTATION FAULT\n");
+    exit(EXIT_FAILURE);
+}
 int main(int argc, char* argv[static 1]){
+    signal(SIGSEGV, printFramesAtSegfault);
     int numObjects = 40;
     if(argc > 1)
         numObjects =  atoi(argv[1]); 
@@ -36,11 +44,11 @@ int main(int argc, char* argv[static 1]){
     }
     tree_printTree(globalInfo->tree);
     printf("Buffer count: %d\n", globalInfo->tree->bufCount);
-    return 0;
     unsigned cycles = 0;
     struct timespec stoptime, starttime;
     timespec_get(&starttime, TIME_UTC);
     for(ever){
+        frames++;
         hit_flagObjects(globalInfo->tree);
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
@@ -52,4 +60,6 @@ int main(int argc, char* argv[static 1]){
                        + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
     printf("Average FPS: %f\n", (double)cycles/((double)deltatime / 1000000));
     tree_printTree(globalInfo->tree);
+    tree_deleteTree(globalInfo->tree);
+    free(globalInfo);
 }
