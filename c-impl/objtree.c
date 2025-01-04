@@ -144,23 +144,7 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         printf("right child buf == parent buf \n");
     }  
     printf("==================\ntree_balanceBuffers2:\n");
-    double accumulator = 0;
-    if(parent->split.isx){
-        for(unsigned i = 0; i < OBJBUFSIZE; i++){
-            accumulator += parent->buf[i].x; 
-        };
-    }
-    else{
-        for(unsigned i = 0; i < OBJBUFSIZE; i++){
-            accumulator += parent->buf[i].y; 
-        };
-    }
-    printf("added up all the coordinates\n");
-    double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
-    for(unsigned i = 0; i < OBJBUFSIZE; i++){
 
-    }
-    parent->split.value = average;
     
     printf("New split is now set at %c=%lf\n", parent->split.isx ? 'x' : 'y', parent->split.value);
     unsigned destwritten = 0;
@@ -176,10 +160,10 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         printf("values compared: %c = %lf and average = %lf\n", 
             parent->split.isx ? 'x' : 'y', 
             *(double*)( (unsigned char*)&(parent->buf[i]) + coordoffset ),
-            average
+            parent->split.value
         );
         //first value is the x or y field of the i-th struct in buf
-        if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > average){
+        if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > parent->split.value){
             printf("moving object %i to new node\n", i);
             memcpy(dest->buf + destwritten, parent->buf + i, sizeof(object));
             memset(parent->buf + i, '\0', sizeof(object));      //wipe the object (old reused buffer)
@@ -240,13 +224,27 @@ int tree_splitNode(objTree* tree, treeNode* node){
     }
     //the root is always x
     else node->split.isx = 1;
-    
+    double accumulator = 0;
+    if(node->split.isx){
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            accumulator += node->buf[i].x; 
+        };
+    }
+    else{
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            accumulator += node->buf[i].y; 
+        };
+    }
+    printf("added up all the coordinates\n");
+    double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
+
+    node->split.value = average;
     printf("checked for axis of split. allocating nodes\n");
     node->left = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
     node->right = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
     fprintf(stderr, "allocated nodes. allocating buffers\n");
     *(node->left) = (treeNode){
-        .buf = node->buf, //reuse parent buf. Only works w/ balanceBuffers2
+        .buf = node->buf, //reuse parent buf. Only works with balanceBuffers2
         .up = node,
         .places = ~0UL,
         .bindrect = (rect_llhh){

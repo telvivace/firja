@@ -23,6 +23,7 @@ int vector_update_aux(treeNode* node){
             continue;
         }
         if(obj->hit) {
+            printf("object velocity is x:%f y:%f\n", obj->v.x, obj->v.y);
             speed v_cm = {
                 .x = (obj->m * obj->v.x + obj->hit->m * obj->hit->v.x)/(obj->m + obj->hit->m),
                 .y = (obj->m * obj->v.y + obj->hit->m * obj->hit->v.y)/(obj->m + obj->hit->m)
@@ -31,6 +32,7 @@ int vector_update_aux(treeNode* node){
                 .x = (obj->v.x - v_cm.x)*-1 + v_cm.x,
                 .y = (obj->v.y - v_cm.y)*-1 + v_cm.y,
             };
+            printf("setting object velocity to x:%f y:%f\n", obj->v.x, obj->v.y);
             obj->hit->v = (speed){
                 .x = (obj->hit->v.x - v_cm.x)*-1 + v_cm.x,
                 .y = (obj->hit->v.y - v_cm.y)*-1 + v_cm.y,
