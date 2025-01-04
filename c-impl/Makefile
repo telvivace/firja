@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -std=c2x -Wall -g 
-LDFLAGS = -lm
+LDFLAGS = -lm -lSDL2
 # Executable and source files
 TARGET = main
 SRC =  cpu_update.c hit_detect.c objtree.c tree_alloc.c treeutils.c
