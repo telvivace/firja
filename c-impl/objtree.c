@@ -261,13 +261,16 @@ int tree_splitNode(objTree* tree, treeNode* node){
         .places = ~0UL,
         .bindrect = (rect_llhh){
             .lowlow = node->split.isx ? 
-                (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
+                (point){ .x = node->split.value, .y = node->bindrect.lowlow.y}
                 :
                 (point){ .x = node->bindrect.highhigh.x, .y = node->split.value},
             .highhigh = node->bindrect.highhigh
         }
     };
     tree->bufCount++;
+    printf("Parent node has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
+    printf("Left child has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->left->bindrect.lowlow.x, node->left->bindrect.highhigh.x, node->left->bindrect.lowlow.y, node->left->bindrect.highhigh.y);
+    printf("Right child has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->right->bindrect.lowlow.x, node->right->bindrect.highhigh.x, node->right->bindrect.lowlow.y, node->right->bindrect.highhigh.y);
 
     fprintf(stderr, "allocated buffers\n");
     tree_balanceBuffers2(node, node->left, node->right);

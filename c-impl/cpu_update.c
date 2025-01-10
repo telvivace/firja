@@ -42,8 +42,8 @@ int vector_update_aux(treeNode* node){
             obj->hit = 0;
         }
         //hardcoded borders of a box so that things don't just fly apart
-        if(obj->x > RIGHTBORDER || obj->x < LEFTBORDER) obj->v.x *= -1;
-        if(obj->y > TOPBORDER || obj->y < BOTTOMBORDER) obj->v.x *= -1;
+        if((obj->x > RIGHTBORDER && obj->v.x > 0) || (obj->x < LEFTBORDER && obj->v.x < 0)) obj->v.x *= -1;
+        if((obj->y > TOPBORDER && obj->v.y > 0) || (obj->y < BOTTOMBORDER && obj->v.y < 0)) obj->v.y *= -1;
     }
     putc('\n', stdout);
     putc('\n', stdout);

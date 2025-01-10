@@ -70,7 +70,7 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         if(node->buf[i].s){
             printf("draw at x:%lf y:%lf s:%f  ", node->buf[i].x, node->buf[i].y, node->buf[i].s);
-            drawCircle(renderer, node->buf[i].x + 100, node->buf[i].y + 200, node->buf[i].s);
+            drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
         }
     }
     printf("\n\n");
