@@ -49,3 +49,22 @@ int tree_printTree(objTree* tree){
     fclose(file);
     return 0;
 }
+static int tree_printTreeBoxes_aux(treeNode* node){
+    if(node->buf){
+        printf("(%lf, %lf) x (%lf, %lf)\n", node->bindrect.lowlow.x, node->bindrect.lowlow.y, node->bindrect.highhigh.x, node->bindrect.highhigh.y);
+        printf("up\n");
+        return 0;
+    }
+    else {
+        printf("left\n");
+        tree_printTreeBoxes_aux(node->left);
+        printf("right\n");
+        tree_printTreeBoxes_aux(node->right);
+    }
+    return 0;
+}
+int tree_printTreeBoxes(objTree* tree){
+    printf("OBJECT TREE PRINTOUT\n");
+    tree_printTreeBoxes_aux(tree->root);
+    return 0;
+}
