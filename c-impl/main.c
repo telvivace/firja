@@ -47,6 +47,15 @@ void drawCircle(SDL_Renderer* renderer, int centerX, int centerY, int radius) {
 }
 void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     if(!node->buf){
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        printf("node rect at x: %lf -- %lf  y : %lf -- %lf\n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
+        SDL_Rect rect = {
+            .x = node->bindrect.lowlow.x,
+            .y = node->bindrect.lowlow.y,
+            .w = node->bindrect.highhigh.x - node->bindrect.lowlow.x,
+            .h = node->bindrect.highhigh.y - node->bindrect.lowlow.y,
+        };
+        SDL_RenderDrawRect(renderer, &rect);
         printf("buffer is null. Left: %p, Right: %p\n", node->left, node->right);
         printf("going left\n");
         renderObjects_rec(node->left, renderer);
@@ -159,6 +168,7 @@ int main(int argc, char* argv[static 1]){
         // Update and draw sprites
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         printf("presenting frame\n");
+        tree_printTreeBoxes(globalInfo->tree);
         // Present rendered frame
         SDL_RenderPresent(renderer);
         // Delay to cap frame rate
