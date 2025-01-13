@@ -33,6 +33,7 @@ struct object {
     float s;
     unsigned m;
     struct object* hit; //optional pointer to an object currently overlapping this one
+    unsigned long id;
 };
 typedef struct object object;
 struct treeSplit {
