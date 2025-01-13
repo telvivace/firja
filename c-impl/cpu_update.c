@@ -1,15 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "cpu_update.h"
 #include "objtree.h"
 #include "settings.h"
 
-int vector_update_aux(treeNode* node){
+int vector_update_aux(objTree* tree, treeNode* node){
     printf("At node: %p\n", node);
     if(!node->buf){
         printf("buffer is null. Left: %p, Right: %p\n", node->left, node->right);
-        vector_update_aux(node->left);
-        vector_update_aux(node->right);
+        vector_update_aux(tree, node->left);
+        vector_update_aux(tree, node->right);
         printf("UP ( %p -> %p)\n", node, node->up);
         return 0;
     }
@@ -44,6 +45,16 @@ int vector_update_aux(treeNode* node){
         //hardcoded borders of a box so that things don't just fly apart
         if((obj->x > RIGHTBORDER && obj->v.x > 0) || (obj->x < LEFTBORDER && obj->v.x < 0)) obj->v.x *= -1;
         if((obj->y > TOPBORDER && obj->v.y > 0) || (obj->y < BOTTOMBORDER && obj->v.y < 0)) obj->v.y *= -1;
+        if(obj->s){
+            if((obj->x > node->bindrect.highhigh.x || obj->x < node->bindrect.lowlow.x || obj->y > node->bindrect.highhigh.y || obj->y < node->bindrect.lowlow.y)){
+                printf("(%lf, %lf) is outside (%lf, %lf) x (%lf, %lf)\n", obj->x, obj->y, node->bindrect.lowlow.x, node->bindrect.lowlow.y, node->bindrect.highhigh.x, node->bindrect.highhigh.y);
+                tree_insertObject(tree, obj);
+                memset(obj, '\0', sizeof(object));
+                node->places |= 1UL << i; //mark this place as vacant
+        }
+        }
+        
+
     }
     putc('\n', stdout);
     putc('\n', stdout);
@@ -51,7 +62,7 @@ int vector_update_aux(treeNode* node){
 }
 int vector_update(objTree* tree){
     printf("Vector update.\n");
-    return vector_update_aux(tree->root);
+    return vector_update_aux(tree, tree->root);
 }
 
 int scalar_update_aux(treeNode* node){
