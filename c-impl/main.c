@@ -74,11 +74,17 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
         .h = node->bindrect.highhigh.y - node->bindrect.lowlow.y,
     };
     SDL_RenderDrawRect(renderer, &rect);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
     
     printf("\ndrawing no. ");
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         if(node->buf[i].s){
+                if(node->buf[i].id == 42){
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+                    drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
+                    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+                    continue;
+                }
             printf("draw at x:%lf y:%lf s:%f  ", node->buf[i].x, node->buf[i].y, node->buf[i].s);
             drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
         }
@@ -109,9 +115,10 @@ int main(int argc, char* argv[static 1]){
             .x = rand() % (RIGHTBORDER - LEFTBORDER - 5),
             .y = rand() % (TOPBORDER - BOTTOMBORDER- 5),
             .v = (speed){
-                .x = ((rand() % 10) - 2) / 2.0f,
-                .y = ((rand() % 10) - 2) / 2.0f,
-            }
+                .x = ((rand() % 10) - 5) / 2.0f,
+                .y = ((rand() % 10) - 5) / 2.0f,
+            },
+            .id = i,
         });
         globalInfo->objectCount++;
     }
