@@ -97,12 +97,19 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
 int main(int argc, char* argv[static 1]){
     signal(SIGSEGV, printFramesAtSegfault);
     int numObjects = 40;
+    unsigned limitedcycles = 0;
+    long int maxcycles = 0;
+    printf("argc: %d\n", argc);
     if(argc > 1)
         numObjects =  atoi(argv[1]); 
+    if(argc > 2){
+        maxcycles = atol(argv[2]);
+        limitedcycles = 1;
+        printf("limited cycles to %ld.\n", maxcycles);
+    }
     printf("start of main\n");
-    globalInformation* globalInfo = malloc(sizeof(globalInformation));
+    globalInformation* globalInfo = calloc(1, sizeof(globalInformation));
     globalInfo->bufferCount = 3;
-    memset(globalInfo, 0, sizeof(*globalInfo));
     printf("init tree\n");
     globalInfo->tree = tree_initTree();
     printf("start loop\n");
@@ -152,9 +159,6 @@ int main(int argc, char* argv[static 1]){
     struct timespec stoptime, starttime;
     timespec_get(&starttime, TIME_UTC);
     while(running){
-        hit_flagObjects(globalInfo->tree);
-        vector_update(globalInfo->tree);
-        scalar_update(globalInfo->tree);
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 running = 0;
@@ -164,6 +168,7 @@ int main(int argc, char* argv[static 1]){
         hit_flagObjects(globalInfo->tree);
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
+        if(limitedcycles == 1 && cycles > maxcycles) running = 0;
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
