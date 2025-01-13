@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -std=c2x -Wall -g 
-LDFLAGS = -lm
+LDFLAGS = -lm -lSDL2
 # Executable and source files
 TARGET = main
 SRC =  cpu_update.c hit_detect.c objtree.c tree_alloc.c treeutils.c
@@ -29,7 +29,7 @@ $(TESTS): $(OBJ) $(TESTSRC)
 	$(CC) $(CFLAGS) -o $(TESTS) $(TESTSRC) $(OBJ) $(LDFLAGS)
 
 # Link object files to create the executable
-$(TARGET): $(OBJ) $(TARGETSRC)
+$(TARGET): $(OBJ) $(SRC) $(MAINSRC)
 	$(CC) $(CFLAGS) -o $(TARGET) $(MAINSRC) $(OBJ) $(LDFLAGS)
 
 # Compile source files into object files

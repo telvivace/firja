@@ -1,11 +1,12 @@
 #include "objtree.h"
 #include <stdio.h>
 #include <string.h>
+#include "settings.h"
 objTree* tree_initTree(){
     printf("init pool 1\n");
-    tree_allocPool* objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
+    tree_allocPool objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
     printf("init pool 2\n");
-    tree_allocPool* nodepool = tree_allocInitPool(1 * 1e3); //one thousand (1 kB)
+    tree_allocPool nodepool = tree_allocInitPool(1 * 1e3); //one thousand (1 kB)
     printf("alloc metadata\n");
     objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
     printf("alloc searchbuf\n");
@@ -18,6 +19,10 @@ objTree* tree_initTree(){
         .buf = rootbuf,
         .places = ~0UL,
         .split.isx = 1,
+        .bindrect = (rect_llhh){
+            .lowlow = (point){.x = LEFTBORDER - 20, .y = BOTTOMBORDER - 20},
+            .highhigh = (point){.x = RIGHTBORDER + 20, .y = TOPBORDER + 20}
+        }
     };
     *pMetadataStruct = (objTree){
         .searchbuf = searchbuf,
@@ -139,23 +144,7 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         printf("right child buf == parent buf \n");
     }  
     printf("==================\ntree_balanceBuffers2:\n");
-    double accumulator = 0;
-    if(parent->split.isx){
-        for(unsigned i = 0; i < OBJBUFSIZE; i++){
-            accumulator += parent->buf[i].x; 
-        };
-    }
-    else{
-        for(unsigned i = 0; i < OBJBUFSIZE; i++){
-            accumulator += parent->buf[i].y; 
-        };
-    }
-    printf("added up all the coordinates\n");
-    double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
-    for(unsigned i = 0; i < OBJBUFSIZE; i++){
 
-    }
-    parent->split.value = average;
     
     printf("New split is now set at %c=%lf\n", parent->split.isx ? 'x' : 'y', parent->split.value);
     unsigned destwritten = 0;
@@ -171,10 +160,10 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         printf("values compared: %c = %lf and average = %lf\n", 
             parent->split.isx ? 'x' : 'y', 
             *(double*)( (unsigned char*)&(parent->buf[i]) + coordoffset ),
-            average
+            parent->split.value
         );
         //first value is the x or y field of the i-th struct in buf
-        if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > average){
+        if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > parent->split.value){
             printf("moving object %i to new node\n", i);
             memcpy(dest->buf + destwritten, parent->buf + i, sizeof(object));
             memset(parent->buf + i, '\0', sizeof(object));      //wipe the object (old reused buffer)
@@ -235,26 +224,56 @@ int tree_splitNode(objTree* tree, treeNode* node){
     }
     //the root is always x
     else node->split.isx = 1;
-    
+    double accumulator = 0;
+    if(node->split.isx){
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            accumulator += node->buf[i].x; 
+        };
+    }
+    else{
+        for(unsigned i = 0; i < OBJBUFSIZE; i++){
+            accumulator += node->buf[i].y; 
+        };
+    }
+    printf("added up all the coordinates\n");
+    double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
+
+    node->split.value = average;
     printf("checked for axis of split. allocating nodes\n");
     node->left = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
     node->right = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
     fprintf(stderr, "allocated nodes. allocating buffers\n");
     *(node->left) = (treeNode){
-        .buf = node->buf, //reuse parent buf. Only works w/ balanceBuffers2
+        .buf = node->buf, //reuse parent buf. Only works with balanceBuffers2
         .up = node,
         .places = ~0UL,
+        .bindrect = (rect_llhh){
+            .lowlow = node->bindrect.lowlow,
+            .highhigh = node->split.isx ? 
+                (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
+                :
+                (point){ .x = node->bindrect.highhigh.x, .y = node->split.value}
+        }
     };
     *(node->right) = (treeNode){
         .buf = tree_allocate(tree->objectAllocPool, sizeof(object)*OBJBUFSIZE),
         .up = node,
         .places = ~0UL,
+        .bindrect = (rect_llhh){
+            .lowlow = node->split.isx ? 
+                (point){ .x = node->split.value, .y = node->bindrect.lowlow.y}
+                :
+                (point){ .x = node->bindrect.lowlow.x, .y = node->split.value},
+            .highhigh = node->bindrect.highhigh
+        }
     };
     tree->bufCount++;
+    printf("Parent node has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
+    printf("Left child has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->left->bindrect.lowlow.x, node->left->bindrect.highhigh.x, node->left->bindrect.lowlow.y, node->left->bindrect.highhigh.y);
+    printf("Right child has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->right->bindrect.lowlow.x, node->right->bindrect.highhigh.x, node->right->bindrect.lowlow.y, node->right->bindrect.highhigh.y);
 
     fprintf(stderr, "allocated buffers\n");
     tree_balanceBuffers2(node, node->left, node->right);
     node->buf = (void*)0;
-    tree->bufCount++;
     return 0;
 }
