@@ -20,8 +20,8 @@ objTree* tree_initTree(){
         .places = ~0UL,
         .split.isx = 1,
         .bindrect = (rect_llhh){
-            .lowlow = (point){.x = LEFTBORDER, .y = BOTTOMBORDER},
-            .highhigh = (point){.x = RIGHTBORDER, .y = TOPBORDER}
+            .lowlow = (point){.x = LEFTBORDER - 20, .y = BOTTOMBORDER - 20},
+            .highhigh = (point){.x = RIGHTBORDER + 20, .y = TOPBORDER + 20}
         }
     };
     *pMetadataStruct = (objTree){
@@ -263,7 +263,7 @@ int tree_splitNode(objTree* tree, treeNode* node){
             .lowlow = node->split.isx ? 
                 (point){ .x = node->split.value, .y = node->bindrect.lowlow.y}
                 :
-                (point){ .x = node->bindrect.highhigh.x, .y = node->split.value},
+                (point){ .x = node->bindrect.lowlow.x, .y = node->split.value},
             .highhigh = node->bindrect.highhigh
         }
     };
@@ -275,6 +275,5 @@ int tree_splitNode(objTree* tree, treeNode* node){
     fprintf(stderr, "allocated buffers\n");
     tree_balanceBuffers2(node, node->left, node->right);
     node->buf = (void*)0;
-    tree->bufCount++;
     return 0;
 }
