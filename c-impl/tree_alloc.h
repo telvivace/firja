@@ -9,7 +9,7 @@ typedef struct tree_allocPool_s* tree_allocPool;
 struct tree_allocPool_s{
     size_t basesize;
     unsigned currentSubpool; //the subpool currently being filled
-    tree_allocSubpool* subpools[34];// ensures > 16GB space even with tiny pools
+    tree_allocSubpool subpools[34];// ensures > 16GB space even with tiny pools
                                     // (exponentially^2 larger pools allocated)
 };
 tree_allocPool tree_allocInitPool(size_t size);
