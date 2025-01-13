@@ -55,6 +55,7 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
         printf("UP ( %p -> %p)\n", node, node->up);
         return;
     }
+    else {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     printf("node rect at x: %lf -- %lf  y : %lf -- %lf\n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
     SDL_Rect rect = {
@@ -76,6 +77,7 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     printf("\n\n");
     printf("UP ( %p -> %p)\n", node, node->up);
     return;
+    }
 }
 int main(int argc, char* argv[static 1]){
     signal(SIGSEGV, printFramesAtSegfault);
@@ -105,6 +107,7 @@ int main(int argc, char* argv[static 1]){
         globalInfo->objectCount++;
     }
     tree_printTree(globalInfo->tree);
+    tree_printTreeBoxes(globalInfo->tree);
     printf("Buffer count: %d\n", globalInfo->tree->bufCount);
     
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -139,8 +142,12 @@ int main(int argc, char* argv[static 1]){
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 running = 0;
+                continue;
             }
         }
+        hit_flagObjects(globalInfo->tree);
+        vector_update(globalInfo->tree);
+        scalar_update(globalInfo->tree);
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
