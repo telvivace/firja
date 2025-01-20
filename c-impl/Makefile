@@ -19,11 +19,13 @@ all: $(TARGET)
 test: CFLAGS += -fsanitize=address,undefined,leak
 test: $(TESTS) 
 
+profile: CFLAGS += -fprofile-generate
+profile: $(TARGET)
 debug: CFLAGS += -fsanitize=address,undefined,leak
 debug: $(TARGET)
 
-release: CFLAGS = -std=c2x -O2
-
+release: CFLAGS = -std=c2x -O2 -fprofile-use
+release: $(TARGET)
 # Link test file with object files
 $(TESTS): $(OBJ) $(TESTSRC)
 	$(CC) $(CFLAGS) -o $(TESTS) $(TESTSRC) $(OBJ) $(LDFLAGS)
