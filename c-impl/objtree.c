@@ -1,6 +1,7 @@
-#include "objtree.h"
 #include <stdio.h>
 #include <string.h>
+#include "objtree.h"
+#include "treeutils.h"
 #include "settings.h"
 objTree* tree_initTree(){
     printf("init pool 1\n");
@@ -132,19 +133,19 @@ this function expects that the buffers of the parent and exactly one child are i
 */
 int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right_child){
     treeNode* dest = (void*)0;
-    treeNode* other = (void*)0;
+    treeNode* reused = (void*)0;
     if(parent->buf == left_child->buf){ 
         dest = right_child;
-        other = left_child;
+        reused = left_child;
         printf("left child buf == parent buf \n");
     }
     else{
         dest = left_child;
-        other = right_child;
+        reused = right_child;
         printf("right child buf == parent buf \n");
     }  
     printf("==================\ntree_balanceBuffers2:\n");
-
+    printf("parent's places: %lx\n", parent->places);
     
     printf("New split is now set at %c=%lf\n", parent->split.isx ? 'x' : 'y', parent->split.value);
     unsigned destwritten = 0;
@@ -157,6 +158,7 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         coordoffset = offsetof(object, y);
 
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
+        tree_printObject(parent->buf + i);
         printf("values compared: %c = %lf and average = %lf\n", 
             parent->split.isx ? 'x' : 'y', 
             *(double*)( (unsigned char*)&(parent->buf[i]) + coordoffset ),
@@ -165,17 +167,20 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         //first value is the x or y field of the i-th struct in buf
         if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > parent->split.value){
             printf("moving object %i to new node\n", i);
+            printf("writing to dest + %d\n", destwritten);
             memcpy(dest->buf + destwritten, parent->buf + i, sizeof(object));
             memset(parent->buf + i, '\0', sizeof(object));      //wipe the object (old reused buffer)
             parent->places |= 1UL << i;                         //mark as vacant (old reused buffer)
             printf("doing paperwork\n");
             dest->places &= ~(1UL << destwritten);              //mark as occupied (new buffer)
+            destwritten++;
         }
         else{
             printf("object %d remains where it was\n", i);
         }
     }
-    other->places = parent->places;
+    reused->places = parent->places;
+    //printf("reused's places: %lx - count: %d\n new's places: %lx - count: %d\n")
     parent->places = ~0UL;
     return 0;
 }
