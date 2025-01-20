@@ -3,6 +3,7 @@
 #include "cpu_update.h"
 #include "treeutils.h"
 #include "settings.h"
+#define GRAPHICS_ON
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <time.h>
@@ -79,7 +80,7 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     printf("\ndrawing no. ");
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         if(node->buf[i].s){
-                if(node->buf[i].id == 42){
+                if(node->buf[i].id == 24){
                     SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
                     drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
                     SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
@@ -115,12 +116,12 @@ int main(int argc, char* argv[static 1]){
     printf("start loop\n");
     for(unsigned i = 0; i < numObjects; i++){
         fprintf(stderr, "iteration %d\n", i);
-        printf("inserting object at x: %d y: %lf v: x: %lf y: %lf", 100/40*i, 100*sin(100/40*i), (float)i/100, -(float)i/100);
+        printf("inserting object with id %d", i);
         tree_insertObject(globalInfo->tree, &(object){
             .m = 5, 
             .s = 5, 
-            .x = rand() % (RIGHTBORDER - LEFTBORDER - 5),
-            .y = rand() % (TOPBORDER - BOTTOMBORDER- 5),
+            .x = rand() % (RIGHTBORDER - LEFTBORDER - 10) + 5,
+            .y = rand() % (TOPBORDER - BOTTOMBORDER- 10) + 5,
             .v = (speed){
                 .x = ((rand() % 10) - 5) / 2.0f,
                 .y = ((rand() % 10) - 5) / 2.0f,
@@ -132,12 +133,12 @@ int main(int argc, char* argv[static 1]){
     tree_printTree(globalInfo->tree);
     tree_printTreeBoxes(globalInfo->tree);
     printf("Buffer count: %d\n", globalInfo->tree->bufCount);
-    
+    #ifdef GRAPHICS_ON
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
-
+    
     SDL_Window* window = SDL_CreateWindow("2D Canvas", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window) {
         printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -152,23 +153,28 @@ int main(int argc, char* argv[static 1]){
         SDL_Quit();
         return 1;
     }
-    unsigned running = 1;
     SDL_Event e;
+    #endif    
+    unsigned running = 1;
+
 
     unsigned cycles = 0;
     struct timespec stoptime, starttime;
     timespec_get(&starttime, TIME_UTC);
     while(running){
+        #ifdef GRAPHICS_ON
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 running = 0;
                 continue;
             }
         }
+        #endif
         hit_flagObjects(globalInfo->tree);
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
         if(limitedcycles == 1 && cycles > maxcycles) running = 0;
+        #ifdef GRAPHICS_ON
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
@@ -185,15 +191,17 @@ int main(int argc, char* argv[static 1]){
         SDL_RenderPresent(renderer);
         // Delay to cap frame rate
         SDL_Delay(12); // ~60 FPS
+        #endif
         cycles++;
         frames++;
     }
             
-
+    #ifdef GRAPHICS_ON
     // Clean up
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    #endif
 
     return 0;
     timespec_get(&stoptime, TIME_UTC);
