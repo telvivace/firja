@@ -1,6 +1,9 @@
+#ifndef ORBLOG_C
+#define ORBLOG_C
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "settings.h"
 /*
 This logger's behaviour is governed by the macro ORB_VERBOSE, which you have to set to 0 or 1 before including it.
 */
@@ -14,7 +17,7 @@ enum log_priorities {
     PRIORITY_BLANK,
     PRIORITY_NUM
 };
-char* log_priority_colors[7] = {
+static char* log_priority_colors[7] = {
     "\033[31m",      //red (error)
     "\033[33m",      //yellow (warning)
     "\033[32m",      //green (ok)
@@ -24,7 +27,7 @@ char* log_priority_colors[7] = {
     ""        //never called (no formatting applied)
 
 };
-char* log_priority_strings[7] = {
+static char* log_priority_strings[7] = {
     " [ ERROR ] ",
     " [ WARN  ] ",                
     " [  OK   ] ",
@@ -33,7 +36,7 @@ char* log_priority_strings[7] = {
     " [ TRACE ] ",
     "",            //user's formatting  (blank)
 };
-char* log_priority_pieces[7] = {
+static char* log_priority_pieces[7] = {
     "\033[31m" " [ ERROR ] " "\033[0m" "%s", //error (red, stderr)
     "\033[33m" " [ WARN  ] " "\033[0m" "%s", //warning (yellow)
     "\033[32m" " [  OK   ] " "\033[0m" "%s", //ok (green)
@@ -83,7 +86,7 @@ orb_log(PRIORITY_TRACE, "Variable a:", a) | prints the string and the value appe
 */
 #define orb_log(priority, ...)  log_func(priority+0U, "" GETFIRST(__VA_ARGS__) "", (const double long[ARGLEN(__VA_ARGS__)]){DELFIRST(__VA_ARGS__)}, ARGLEN(__VA_ARGS__)-1U)
 
-void log_func(unsigned priority, const char string[static 1], const double long* args, unsigned argnum) {
+static inline void log_func(unsigned priority, const char string[static 1], const double long* args, unsigned argnum) {
     FILE* stream;
     if(priority == PRIORITY_ERR){
         stream = stderr;
@@ -111,7 +114,7 @@ void log_func(unsigned priority, const char string[static 1], const double long*
 /*avoid using PRIORITY_MSG, because it doesn't work properly here. TODO probably never*/
 #define orb_logf(priority, ...)  if(logf_checkverb(priority+0U)){ printf("" GETFIRST(__VA_ARGS__) "%.0d\n", DELFIRST(__VA_ARGS__)); }
 
-int logf_checkverb(unsigned priority){
+static inline int logf_checkverb(unsigned priority){
     #if ORB_VERBOSE == 1
 
     printf("%s%s\033[0m", log_priority_colors[priority], log_priority_strings[priority]);
@@ -127,3 +130,4 @@ int logf_checkverb(unsigned priority){
     
     #endif
 }
+#endif

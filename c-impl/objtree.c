@@ -3,18 +3,19 @@
 #include "objtree.h"
 #include "treeutils.h"
 #include "settings.h"
+#include "liblogs.h"
 objTree* tree_initTree(){
-    printf("init pool 1\n");
+    orb_logf(PRIORITY_DBUG,"init pool 1");
     tree_allocPool objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
-    printf("init pool 2\n");
+    orb_logf(PRIORITY_DBUG,"init pool 2");
     tree_allocPool nodepool = tree_allocInitPool(1 * 1e3); //one thousand (1 kB)
-    printf("alloc metadata\n");
+    orb_logf(PRIORITY_DBUG,"alloc metadata");
     objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
-    printf("alloc searchbuf\n");
+    orb_logf(PRIORITY_DBUG,"alloc searchbuf");
     treeNode** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(treeNode*));
-    printf("alloc root node\n");
+    orb_logf(PRIORITY_DBUG,"alloc root node");
     treeNode* pRoot = tree_allocate(nodepool, sizeof(treeNode));
-    printf("alloc root node buf\n");
+    orb_logf(PRIORITY_DBUG,"alloc root node buf");
     object* rootbuf = tree_allocate(objectpool, sizeof(treeNode)*OBJBUFSIZE);
     *pRoot = (treeNode){
         .buf = rootbuf,
@@ -36,9 +37,9 @@ objTree* tree_initTree(){
     return pMetadataStruct;
 }
 void tree_deleteTree(objTree* tree){
-    printf("delet pool 2\n");   
+    orb_logf(PRIORITY_DBUG,"delet pool 2");   
     tree_allocDestroyPool(tree->objectAllocPool);
-    printf("delet pool 1\n");
+    orb_logf(PRIORITY_DBUG,"delet pool 1");
     tree_allocDestroyPool(tree->nodeAllocPool);
 
 }
@@ -49,21 +50,21 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
         switch(currentNode->split.isx) {
             case 1: //x split
                 if(obj->x < currentNode->split.value){
-                    printf("descend left\n");
+                    orb_logf(PRIORITY_DBUG,"descend left");
                     currentNode = currentNode->left;
                 }
                 else {
-                    printf("descend right\n");
+                    orb_logf(PRIORITY_DBUG,"descend right");
                     currentNode = currentNode->right;
                 }
                 break;
             case 0:
                 if(obj->y < currentNode->split.value){
-                    printf("descend left\n");
+                    orb_logf(PRIORITY_DBUG,"descend left");
                     currentNode = currentNode->left;
                 }
                 else {
-                    printf("descend right\n");
+                    orb_logf(PRIORITY_DBUG,"descend right");
                     currentNode = currentNode->right;
                 }
         }
@@ -76,7 +77,7 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
     //  Also its not that bad, it starts getting actually bad at around 10^7 or more, so we're  
     //  kinda okay if we keep the numbers low
     // ========================
-    printf("==================\ntree_balanceBuffers:\n");
+    orb_logf(PRIORITY_DBUG,"==================\ntree_balanceBuffers:");
     double accumulator = 0;
     if(parent->split.isx){
         for(unsigned i = 0; i < OBJBUFSIZE; i++){
@@ -88,12 +89,12 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
             accumulator += parent->buf[i].y; 
         };
     }
-    printf("added up all the coordinates\n");
+    orb_logf(PRIORITY_DBUG,"added up all the coordinates");
     double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
     unsigned leftcount = 0; //how many objects in given child buffer
     unsigned rightcount = 0;
     parent->split.value = average;
-    printf("New split is now set at %c=%lf\n", parent->split.isx ? 'x' : 'y', parent->split.value);
+    orb_logf(PRIORITY_TRACE,"New split is now set at %c=%lf", parent->split.isx ? 'x' : 'y', parent->split.value);
     left_child->places = ~0UL;
     right_child->places = ~0UL;
     if(parent->split.isx){ //split based on the average
@@ -137,17 +138,17 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
     if(parent->buf == left_child->buf){ 
         dest = right_child;
         reused = left_child;
-        printf("left child buf == parent buf \n");
+        orb_logf(PRIORITY_TRACE,"left child buf == parent buf ");
     }
     else{
         dest = left_child;
         reused = right_child;
-        printf("right child buf == parent buf \n");
+        orb_logf(PRIORITY_TRACE,"right child buf == parent buf ");
     }  
-    printf("==================\ntree_balanceBuffers2:\n");
-    printf("parent's places: %lx\n", parent->places);
+    orb_logf(PRIORITY_DBUG,"==================\ntree_balanceBuffers2:");
+    orb_logf(PRIORITY_TRACE,"parent's places: %lx", parent->places);
     
-    printf("New split is now set at %c=%lf\n", parent->split.isx ? 'x' : 'y', parent->split.value);
+    orb_logf(PRIORITY_TRACE,"New split is now set at %c=%lf", parent->split.isx ? 'x' : 'y', parent->split.value);
     unsigned destwritten = 0;
 
     // use precalculated offset to avoid code duplication or checking in the for loop
@@ -159,42 +160,42 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
 
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         tree_printObject(parent->buf + i);
-        printf("values compared: %c = %lf and average = %lf\n", 
+        orb_logf(PRIORITY_TRACE,"values compared: %c = %lf and average = %lf", 
             parent->split.isx ? 'x' : 'y', 
             *(double*)( (unsigned char*)&(parent->buf[i]) + coordoffset ),
             parent->split.value
         );
         //first value is the x or y field of the i-th struct in buf
         if(*(double*)( (char*)&(parent->buf[i]) + coordoffset )/*same as object->[x/y]*/ > parent->split.value){
-            printf("moving object %i to new node\n", i);
-            printf("writing to dest + %d\n", destwritten);
+            orb_logf(PRIORITY_TRACE,"moving object %i to new node", i);
+            orb_logf(PRIORITY_TRACE,"writing to dest + %d", destwritten);
             memcpy(dest->buf + destwritten, parent->buf + i, sizeof(object));
             memset(parent->buf + i, '\0', sizeof(object));      //wipe the object (old reused buffer)
             parent->places |= 1UL << i;                         //mark as vacant (old reused buffer)
-            printf("doing paperwork\n");
+            orb_logf(PRIORITY_DBUG,"doing paperwork");
             dest->places &= ~(1UL << destwritten);              //mark as occupied (new buffer)
             destwritten++;
         }
         else{
-            printf("object %d remains where it was\n", i);
+            orb_logf(PRIORITY_TRACE,"object %d remains where it was", i);
         }
     }
     reused->places = parent->places;
-    //printf("reused's places: %lx - count: %d\n new's places: %lx - count: %d\n")
+    //orb_logf(PRIORITY_TRACE,"reused's places: %lx - count: %d\n new's places: %lx - count: %d")
     parent->places = ~0UL;
     return 0;
 }
 
 
 int tree_insertObject(objTree* tree, object* obj){
-    printf("------------------\ntree_insertObject:\n");
-    printf("searching for a parent node\n");
+    orb_logf(PRIORITY_DBUG,"------------------\ntree_insertObject:");
+    orb_logf(PRIORITY_DBUG,"searching for a parent node");
     treeNode* parentNode = tree_findParentNode(tree, obj);
-    printf("found a parent node\n");
-    printf("places: %lx\n", parentNode->places);
-    printf("comparison: %x\n", OBJBUFFULLMASK);
+    orb_logf(PRIORITY_DBUG,"found a parent node");
+    orb_logf(PRIORITY_TRACE,"places: %lx", parentNode->places);
+    orb_logf(PRIORITY_TRACE,"comparison: %x", OBJBUFFULLMASK);
     if(!(OBJBUFFULLMASK & parentNode->places)) { //buffer is full
-        printf("splitting a node\n");
+        orb_logf(PRIORITY_DBUG,"splitting a node");
         if(tree_splitNode(tree, parentNode) != 0) return 1; 
         if(parentNode->split.isx){
             if(obj->x < parentNode->split.value){
@@ -219,9 +220,9 @@ int tree_insertObject(objTree* tree, object* obj){
 }
 
 int tree_splitNode(objTree* tree, treeNode* node){
-    printf("==================\ntree_splitNode:\n");
-    printf("node pointer: %p split coordinate: %c\n", node, node->split.isx ? 'x' : 'y');
-    printf("got through ascent phase\n");
+    orb_logf(PRIORITY_DBUG,"==================\ntree_splitNode:");
+    orb_logf(PRIORITY_TRACE,"node pointer: %p split coordinate: %c", node, node->split.isx ? 'x' : 'y');
+    orb_logf(PRIORITY_DBUG,"got through ascent phase");
     if(node->up){
         // if parent is y, then this is x.
         // the opposite is guaranteed by calloc
@@ -240,14 +241,14 @@ int tree_splitNode(objTree* tree, treeNode* node){
             accumulator += node->buf[i].y; 
         };
     }
-    printf("added up all the coordinates\n");
+    orb_logf(PRIORITY_DBUG,"added up all the coordinates");
     double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
 
     node->split.value = average;
-    printf("checked for axis of split. allocating nodes\n");
+    orb_logf(PRIORITY_DBUG,"checked for axis of split. allocating nodes");
     node->left = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
     node->right = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
-    fprintf(stderr, "allocated nodes. allocating buffers\n");
+    orb_logf(PRIORITY_DBUG, "allocated nodes. allocating buffers");
     *(node->left) = (treeNode){
         .buf = node->buf, //reuse parent buf. Only works with balanceBuffers2
         .up = node,
@@ -273,11 +274,11 @@ int tree_splitNode(objTree* tree, treeNode* node){
         }
     };
     tree->bufCount++;
-    printf("Parent node has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
-    printf("Left child has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->left->bindrect.lowlow.x, node->left->bindrect.highhigh.x, node->left->bindrect.lowlow.y, node->left->bindrect.highhigh.y);
-    printf("Right child has a rectangle of x: %lf -- %lf, y: %lf -- %lf \n", node->right->bindrect.lowlow.x, node->right->bindrect.highhigh.x, node->right->bindrect.lowlow.y, node->right->bindrect.highhigh.y);
+    orb_logf(PRIORITY_TRACE,"Parent node has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
+    orb_logf(PRIORITY_TRACE,"Left child has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->left->bindrect.lowlow.x, node->left->bindrect.highhigh.x, node->left->bindrect.lowlow.y, node->left->bindrect.highhigh.y);
+    orb_logf(PRIORITY_TRACE,"Right child has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->right->bindrect.lowlow.x, node->right->bindrect.highhigh.x, node->right->bindrect.lowlow.y, node->right->bindrect.highhigh.y);
 
-    fprintf(stderr, "allocated buffers\n");
+    orb_logf(PRIORITY_DBUG, "allocated buffers");
     tree_balanceBuffers2(node, node->left, node->right);
     node->buf = (void*)0;
     return 0;

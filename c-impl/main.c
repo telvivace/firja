@@ -3,7 +3,6 @@
 #include "cpu_update.h"
 #include "treeutils.h"
 #include "settings.h"
-#define GRAPHICS_ON
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <time.h>
@@ -12,12 +11,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include "liblogs.h"
 #define ever ;;
 volatile unsigned long frames = 0; //for diagnostic purposes
-void printFramesAtSegfault(int signal){
-    printf("Frames rendered: %ld\n", frames);
-    printf("SEGMENTATION FAULT\n");
-    exit(EXIT_FAILURE);
+struct timespec starttime = {}; //so it can be printed out if interrupted
+struct timespec stoptime = {}; //so it can be printed out if interrupted
+void printFramesAtInterrupt(int signal){
+    timespec_get(&stoptime, TIME_UTC);
+    orb_logf(PRIORITY_ERR, "Interrupted by signal.");
+    orb_logf(PRIORITY_OK, "Frames rendered: %ld", frames);
+    unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000 + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
+    orb_logf(PRIORITY_OK,"Average FPS: %f", (double)frames/((double)deltatime / 1000000));
+    exit(EXIT_SUCCESS);
 }
 
 // Function to draw a circle using the Midpoint Circle Algorithm
@@ -49,7 +54,7 @@ void drawCircle(SDL_Renderer* renderer, int centerX, int centerY, int radius) {
 void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     if(!node->buf){
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        printf("node rect at x: %lf -- %lf  y : %lf -- %lf\n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
+        orb_logf(PRIORITY_TRACE,"node rect at x: %lf -- %lf  y : %lf -- %lf", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
         SDL_Rect rect = {
             .x = node->bindrect.lowlow.x,
             .y = node->bindrect.lowlow.y,
@@ -57,17 +62,17 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
             .h = node->bindrect.highhigh.y - node->bindrect.lowlow.y,
         };
         SDL_RenderDrawRect(renderer, &rect);
-        printf("buffer is null. Left: %p, Right: %p\n", node->left, node->right);
-        printf("going left\n");
+        orb_logf(PRIORITY_TRACE,"buffer is null. Left: %p, Right: %p", node->left, node->right);
+        orb_logf(PRIORITY_DBUG,"going left");
         renderObjects_rec(node->left, renderer);
-        printf("going right\n");
+        orb_logf(PRIORITY_DBUG,"going right");
         renderObjects_rec(node->right, renderer);
-        printf("UP ( %p -> %p)\n", node, node->up);
+        orb_logf(PRIORITY_DBUG,"UP ( %p -> %p)", node, node->up);
         return;
     }
     else {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    printf("node rect at x: %lf -- %lf  y : %lf -- %lf\n", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
+    orb_logf(PRIORITY_TRACE,"node rect at x: %lf -- %lf  y : %lf -- %lf", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
     SDL_Rect rect = {
         .x = node->bindrect.lowlow.x,
         .y = node->bindrect.lowlow.y,
@@ -77,7 +82,6 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     SDL_RenderDrawRect(renderer, &rect);
         SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
     
-    printf("\ndrawing no. ");
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         if(node->buf[i].s){
                 if(node->buf[i].id == 24){
@@ -86,37 +90,38 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
                     SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
                     continue;
                 }
-            printf("draw at x:%lf y:%lf s:%f  ", node->buf[i].x, node->buf[i].y, node->buf[i].s);
+            orb_logf(PRIORITY_TRACE,"draw at x:%lf y:%lf s:%f  ", node->buf[i].x, node->buf[i].y, node->buf[i].s);
             drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
         }
     }
-    printf("\n\n");
-    printf("UP ( %p -> %p)\n", node, node->up);
+    orb_logf(PRIORITY_BLANK,"\n\n");
+    orb_logf(PRIORITY_BLANK,"UP ( %p -> %p)", node, node->up);
     return;
     }
 }
 int main(int argc, char* argv[static 1]){
-    signal(SIGSEGV, printFramesAtSegfault);
+    signal(SIGSEGV, printFramesAtInterrupt);
+    signal(SIGINT, printFramesAtInterrupt);
     int numObjects = 40;
     unsigned limitedcycles = 0;
     long int maxcycles = 0;
-    printf("argc: %d\n", argc);
+    orb_logf(PRIORITY_OK,"argc: %d", argc);
     if(argc > 1)
         numObjects =  atoi(argv[1]); 
     if(argc > 2){
         maxcycles = atol(argv[2]);
         limitedcycles = 1;
-        printf("limited cycles to %ld.\n", maxcycles);
+        orb_logf(PRIORITY_OK,"limited cycles to %ld.", maxcycles);
     }
-    printf("start of main\n");
+    orb_logf(PRIORITY_DBUG,"start of main");
     globalInformation* globalInfo = calloc(1, sizeof(globalInformation));
     globalInfo->bufferCount = 3;
-    printf("init tree\n");
+    orb_logf(PRIORITY_DBUG,"init tree");
     globalInfo->tree = tree_initTree();
-    printf("start loop\n");
+    orb_logf(PRIORITY_DBUG,"start loop");
     for(unsigned i = 0; i < numObjects; i++){
-        fprintf(stderr, "iteration %d\n", i);
-        printf("inserting object with id %d", i);
+        orb_logf(PRIORITY_TRACE, "iteration %d", i);
+        orb_logf(PRIORITY_TRACE,"inserting object with id %d", i);
         tree_insertObject(globalInfo->tree, &(object){
             .m = 5, 
             .s = 5, 
@@ -132,23 +137,23 @@ int main(int argc, char* argv[static 1]){
     }
     tree_printTree(globalInfo->tree);
     tree_printTreeBoxes(globalInfo->tree);
-    printf("Buffer count: %d\n", globalInfo->tree->bufCount);
-    #ifdef GRAPHICS_ON
+    orb_logf(PRIORITY_TRACE,"Buffer count: %d", globalInfo->tree->bufCount);
+    #if GRAPHICS_ON == 1
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+        orb_logf(PRIORITY_ERR,"SDL could not initialize! SDL_Error: %s", SDL_GetError());
         return 1;
     }
-    
+
     SDL_Window* window = SDL_CreateWindow("2D Canvas", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     if (!window) {
-        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        orb_logf(PRIORITY_ERR,"Window could not be created! SDL_Error: %s", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        orb_logf(PRIORITY_ERR,"Renderer could not be created! SDL_Error: %s", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return 1;
@@ -159,10 +164,9 @@ int main(int argc, char* argv[static 1]){
 
 
     unsigned cycles = 0;
-    struct timespec stoptime, starttime;
     timespec_get(&starttime, TIME_UTC);
     while(running){
-        #ifdef GRAPHICS_ON
+        #if GRAPHICS_ON == 1
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 running = 0;
@@ -174,18 +178,18 @@ int main(int argc, char* argv[static 1]){
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
         if(limitedcycles == 1 && cycles > maxcycles) running = 0;
-        #ifdef GRAPHICS_ON
+        #if GRAPHICS_ON == 1
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        printf("Drawing.\n");
+        orb_logf(PRIORITY_DBUG,"Drawing.");
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         renderObjects_rec(globalInfo->tree->root, renderer);
 
 
         // Update and draw sprites
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        printf("presenting frame\n");
+        orb_logf(PRIORITY_DBUG,"presenting frame");
         tree_printTreeBoxes(globalInfo->tree);
         // Present rendered frame
         SDL_RenderPresent(renderer);
@@ -196,19 +200,20 @@ int main(int argc, char* argv[static 1]){
         frames++;
     }
             
-    #ifdef GRAPHICS_ON
+    #if GRAPHICS_ON == 1
     // Clean up
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     #endif
 
-    return 0;
+    
     timespec_get(&stoptime, TIME_UTC);
     unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000
                        + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
-    printf("Average FPS: %f\n", (double)cycles/((double)deltatime / 1000000));
+    orb_logf(PRIORITY_OK,"Average FPS: %f", (double)cycles/((double)deltatime / 1000000));
     tree_printTree(globalInfo->tree);
     tree_deleteTree(globalInfo->tree);
     free(globalInfo);
+    return 0;
 }
