@@ -15,13 +15,13 @@ unsigned countSetBitsUL(unsigned long N)
 
 static int tree_printTree_aux(treeNode* node, FILE* file){
     if(node->buf){
-        orb_logf(PRIORITY_TRACE,"on places : %lx we get %d\n", node->places, 64 - countSetBitsUL(node->places));
+        orb_logf(PRIORITY_TRACE,"on places : %lx we get %d", node->places, 64 - countSetBitsUL(node->places));
         fprintf(file, "\nchild {node {%d}}", 64 - countSetBitsUL(node->places));
     }
 
     else {
         fprintf(file, "\nchild {node {0}");
-        orb_logf(PRIORITY_TRACE,"left\n");
+        orb_logf(PRIORITY_TRACE,"left");
         tree_printTree_aux(node->left, file);
         tree_printTree_aux(node->right, file);
         fprintf(file, "}");
@@ -52,20 +52,20 @@ int tree_printTree(objTree* tree){
 }
 static int tree_printTreeBoxes_aux(treeNode* node){
     if(node->buf){
-        orb_logf(PRIORITY_TRACE,"(%lf, %lf) x (%lf, %lf)\n", node->bindrect.lowlow.x, node->bindrect.lowlow.y, node->bindrect.highhigh.x, node->bindrect.highhigh.y);
-        orb_logf(PRIORITY_DBUG,"up\n");
+        orb_logf(PRIORITY_TRACE,"(%lf, %lf) x (%lf, %lf)", node->bindrect.lowlow.x, node->bindrect.lowlow.y, node->bindrect.highhigh.x, node->bindrect.highhigh.y);
+        orb_logf(PRIORITY_DBUG,"up");
         return 0;
     }
     else {
-        orb_logf(PRIORITY_DBUG,"left\n");
+        orb_logf(PRIORITY_DBUG,"left");
         tree_printTreeBoxes_aux(node->left);
-        orb_logf(PRIORITY_DBUG,"right\n");
+        orb_logf(PRIORITY_DBUG,"right");
         tree_printTreeBoxes_aux(node->right);
     }
     return 0;
 }
 int tree_printTreeBoxes(objTree* tree){
-    orb_logf(PRIORITY_DBUG,"OBJECT TREE PRINTOUT\n");
+    orb_logf(PRIORITY_DBUG,"OBJECT TREE PRINTOUT");
     tree_printTreeBoxes_aux(tree->root);
     return 0;
 }

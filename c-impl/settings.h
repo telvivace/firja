@@ -10,8 +10,10 @@
  #define SCREEN_HEIGHT 900
  #define SPRITE_SIZE 32
  #define NUM_SPRITES 100
-// Logger verbosity
+// Logger verbosity (0 -> 1)
  #define ORB_VERBOSE 0
-// Graphics mode
- #define GRAPHICS_ON 0
+// Graphics mode (0/1)
+ #define GRAPHICS_ON 1
+// Debug mode (0/1)
+ #define DBUG_MODE 0
 #endif

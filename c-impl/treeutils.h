@@ -10,7 +10,7 @@ int tree_printTreeBoxes(objTree* tree);
 unsigned countSetBitsUL(unsigned long N);
 
 static inline void tree_printObject(object* obj){
-    orb_logf(PRIORITY_TRACE,"id: %ld\n x: %lf  y: %lf\n s: %lf\n",
+    orb_logf(PRIORITY_TRACE,"id: %ld\n x: %lf  y: %lf\n s: %lf",
     obj->id, obj->x, obj->y, obj->s);
 }
 #endif

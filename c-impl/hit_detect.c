@@ -66,28 +66,28 @@ int tree_findRect_deep(objTree* tree, treeNode* node, rect_ofex query, object* r
 //recursive function for hit detection
 static int hit_flagObjects_aux(treeNode* node){
     if(!node->buf){
-        orb_logf(PRIORITY_TRACE,"descending from node %p down into %p (left) and %p (right)\n", node, node->left, node->right);
+        orb_logf(PRIORITY_TRACE,"descending from node %p down into %p (left) and %p (right)", node, node->left, node->right);
         hit_flagObjects_aux(node->left);
         hit_flagObjects_aux(node->right);
         return 0;
     }
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
-        orb_logf(PRIORITY_TRACE,"Structure no. %d has fields:\n"\
+        orb_logf(PRIORITY_TRACE,"Structure no. %d has fields:"\
                "x: %lf y: %lf\n"\
                "s: %f m: %d\n"\
-               "hit pointer: %p\n", i,  node->buf[i].x, node->buf[i].y, node->buf[i].s, node->buf[i].m, node->buf[i].hit);
+               "hit pointer: %p", i,  node->buf[i].x, node->buf[i].y, node->buf[i].s, node->buf[i].m, node->buf[i].hit);
         if(node->buf[i].s && !node->buf[i].hit){ //if size is zero then the object is either uninitialized or does not interact physically
-            orb_logf(PRIORITY_TRACE,"Non-collided object detected:\n\tObject no. %d is valid\n", i); 
+            orb_logf(PRIORITY_TRACE,"Non-collided object detected:\n\tObject no. %d is valid", i); 
             for(unsigned j = 0; j < OBJBUFSIZE; j++){ //check inside the same buffer
                 if(j == i) continue; //dont wanna check with ourselves
                 if(node->buf[j].hit) continue; //already intersecting with something
                 if(node->buf[j].s && !node->buf[j].hit){
                     double dist = sqrt(SQUARE(node->buf[j].x - node->buf[i].x) + SQUARE(node->buf[j].y - node->buf[i].y));
-                    orb_logf(PRIORITY_TRACE,"\tDistance between objects %d and %d is %lf\n", i, j, dist);
+                    orb_logf(PRIORITY_TRACE,"\tDistance between objects %d and %d is %lf", i, j, dist);
                     if(dist < (node->buf[i].s + node->buf[j].s)){
                         node->buf[i].hit = node->buf + j;
                         node->buf[j].hit = node->buf + i;
-                        orb_logf(PRIORITY_TRACE,"\tObject no. %d intersects with object no. %d\n", i, j);
+                        orb_logf(PRIORITY_TRACE,"\tObject no. %d intersects with object no. %d", i, j);
                         break;
                 }
                 }
@@ -101,8 +101,8 @@ static int hit_flagObjects_aux(treeNode* node){
 }
 //runner function
 int hit_flagObjects(objTree* tree){
-    orb_logf(PRIORITY_DBUG,"==============\nhit_flagObjects\n");
+    orb_logf(PRIORITY_DBUG,"==============\nhit_flagObjects");
     hit_flagObjects_aux(tree->root);
-    orb_logf(PRIORITY_DBUG,"aux returned, returning\n");
+    orb_logf(PRIORITY_DBUG,"aux returned, returning");
     return 0;
 }

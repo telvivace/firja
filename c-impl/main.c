@@ -24,7 +24,7 @@ void printFramesAtInterrupt(int signal){
     orb_logf(PRIORITY_OK,"Average FPS: %f", (double)frames/((double)deltatime / 1000000));
     exit(EXIT_SUCCESS);
 }
-
+#if GRAPHICS_ON
 // Function to draw a circle using the Midpoint Circle Algorithm
 void drawCircle(SDL_Renderer* renderer, int centerX, int centerY, int radius) {
     int x = radius;
@@ -94,20 +94,22 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
             drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
         }
     }
-    orb_logf(PRIORITY_BLANK,"\n\n");
     orb_logf(PRIORITY_BLANK,"UP ( %p -> %p)", node, node->up);
     return;
     }
 }
+#endif
 int main(int argc, char* argv[static 1]){
     signal(SIGSEGV, printFramesAtInterrupt);
     signal(SIGINT, printFramesAtInterrupt);
-    int numObjects = 40;
+    long int numObjects = 40;
     unsigned limitedcycles = 0;
     long int maxcycles = 0;
     orb_logf(PRIORITY_OK,"argc: %d", argc);
-    if(argc > 1)
-        numObjects =  atoi(argv[1]); 
+    if(argc > 1){
+        numObjects =  atol(argv[1]); 
+        orb_logf(PRIORITY_OK, "running with %ld objects.", numObjects);
+    }
     if(argc > 2){
         maxcycles = atol(argv[2]);
         limitedcycles = 1;
@@ -135,8 +137,10 @@ int main(int argc, char* argv[static 1]){
         });
         globalInfo->objectCount++;
     }
+    #if DBUG_MODE == 1
     tree_printTree(globalInfo->tree);
     tree_printTreeBoxes(globalInfo->tree);
+    #endif
     orb_logf(PRIORITY_TRACE,"Buffer count: %d", globalInfo->tree->bufCount);
     #if GRAPHICS_ON == 1
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -196,6 +200,10 @@ int main(int argc, char* argv[static 1]){
         // Delay to cap frame rate
         SDL_Delay(12); // ~60 FPS
         #endif
+        if(limitedcycles){
+            printf("\rProgress: %3f%%", (float)cycles/(float)maxcycles * 100);
+            fflush(stdout);
+        }
         cycles++;
         frames++;
     }
@@ -211,8 +219,10 @@ int main(int argc, char* argv[static 1]){
     timespec_get(&stoptime, TIME_UTC);
     unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000
                        + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
-    orb_logf(PRIORITY_OK,"Average FPS: %f", (double)cycles/((double)deltatime / 1000000));
+    orb_logf(PRIORITY_OK,"\nAverage FPS: %f", (double)cycles/((double)deltatime / 1000000));
+    #if DBUG_MODE == 1
     tree_printTree(globalInfo->tree);
+    #endif
     tree_deleteTree(globalInfo->tree);
     free(globalInfo);
     return 0;
