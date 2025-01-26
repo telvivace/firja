@@ -58,6 +58,7 @@ struct objTree {
     treeNode* root;
     object** searchbuf;
     unsigned bufCount;
+    unsigned long validObjCount;
 };
 typedef struct objTree objTree;
 /*

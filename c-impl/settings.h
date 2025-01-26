@@ -6,10 +6,10 @@
  #define TOPBORDER 900
  #define BOTTOMBORDER 0
 //Gravity (deducted from y vector component)
- #define GRAVITY -0.1
+ #define GRAVITY 0
 //Wall bounciness (0->1 usually except if you're crazy)
 //negative values will make things sink into the walls
- #define BOUNCE 1.1
+ #define BOUNCE 1
 
 // Screen dimensions
  #define SCREEN_WIDTH 1200
@@ -24,7 +24,7 @@
 //tree settings
  #define MAXOBJSIZE 20
  #define SEARCHBUFSIZE 40
- #define OBJBUFSIZE 16 //max 64 elements, governed by implementation
- #define OBJBUFFULLMASK 65535 //2^(OBJBUFSIZE)-1
+ #define OBJBUFSIZE 8 //max 64 elements, governed by implementation
+ #define OBJBUFFULLMASK ((1UL << OBJBUFSIZE) - 1)
 
 #endif

@@ -95,6 +95,8 @@ static int hit_flagObjects_aux(objTree* tree, treeNode* node){
                 },
                 tree->searchbuf
             );
+            if(numResults > (SEARCHBUFSIZE - 4))
+                orb_log(PRIORITY_WARN, "Approaching searchbuf size limit: %d/%d", numResults, SEARCHBUFSIZE);
             //do hit detection with the buffers found
             for(unsigned bufindex = 0; bufindex < numResults; bufindex++){
                 object* buf = tree->searchbuf[bufindex];
