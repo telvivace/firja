@@ -18,7 +18,12 @@ struct timespec starttime = {}; //so it can be printed out if interrupted
 struct timespec stoptime = {}; //so it can be printed out if interrupted
 void printFramesAtInterrupt(int signal){
     timespec_get(&stoptime, TIME_UTC);
-    orb_logf(PRIORITY_ERR, "Interrupted by signal.");
+    if(signal == SIGSEGV){
+        orb_logf(PRIORITY_ERR, "Segmentation fault!");
+    }
+    else {
+        orb_logf(PRIORITY_OK, "Interrupted.");
+    }
     orb_logf(PRIORITY_OK, "Frames rendered: %ld", frames);
     unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000 + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
     orb_logf(PRIORITY_OK,"Average FPS: %f", (double)frames/((double)deltatime / 1000000));
@@ -167,7 +172,7 @@ int main(int argc, char* argv[static 1]){
     unsigned running = 1;
 
 
-    unsigned cycles = 0;
+    unsigned long cycles = 0;
     timespec_get(&starttime, TIME_UTC);
     while(running){
         #if GRAPHICS_ON == 1
