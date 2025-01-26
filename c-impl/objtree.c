@@ -12,7 +12,7 @@ objTree* tree_initTree(){
     orb_logf(PRIORITY_DBUG,"alloc metadata");
     objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
     orb_logf(PRIORITY_DBUG,"alloc searchbuf");
-    treeNode** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(treeNode*));
+    object** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(object*));
     orb_logf(PRIORITY_DBUG,"alloc root node");
     treeNode* pRoot = tree_allocate(nodepool, sizeof(treeNode));
     orb_logf(PRIORITY_DBUG,"alloc root node buf");
