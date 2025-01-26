@@ -5,7 +5,10 @@
  #define RIGHTBORDER 1200
  #define TOPBORDER 900
  #define BOTTOMBORDER 0
-//Gravity (deducted from y vector component)
+//Gravity (substracted from y vector component)
+//note: actually gravity is added to the vector,
+//because SDL2 has (0,0) on the top left, so it's
+//easier for the user to see it correctly...
  #define GRAVITY 0
 //Wall bounciness (0->1 usually except if you're crazy)
 //negative values will make things sink into the walls
