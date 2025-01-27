@@ -50,6 +50,7 @@ struct treeNode {
     object* buf; //if not null, its a leaf!
     uint64_t places; //bitmask: vacant place = 1, filled = 0, start at least significant
     rect_llhh bindrect;
+    unsigned level; //how deep is the node within the tree
 };
 typedef struct treeNode treeNode;
 

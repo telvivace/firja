@@ -5,57 +5,63 @@
 #define SQUARE(x) ((x)*(x))
 
 //documentation in the runner function below
-static void hit_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12], unsigned* numWritten){
+static void tree_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12], unsigned* pNumWritten){
     if(!node->buf){
         if(node->split.isx) {
             if(rect.offset.x + rect.extent.width < node->split.value){
-                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
+                tree_findRect_shallow_aux(tree, node->left, rect, results, pNumWritten);
             }
             else if (rect.offset.x + rect.extent.width >= node->split.value && rect.offset.x <= node->split.value){
-                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
-                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+                tree_findRect_shallow_aux(tree, node->left, rect, results, pNumWritten);
+                tree_findRect_shallow_aux(tree, node->right, rect, results, pNumWritten);
             }
             else {
-                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+                tree_findRect_shallow_aux(tree, node->right, rect, results, pNumWritten);
             }
         }
         else {
             if(rect.offset.y + rect.extent.height < node->split.value){
-                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
+                tree_findRect_shallow_aux(tree, node->left, rect, results, pNumWritten);
             }
             else if (rect.offset.y + rect.extent.height >= node->split.value && rect.offset.y <= node->split.value){
-                hit_findRect_shallow_aux(tree, node->left, rect, results, numWritten);
-                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+                tree_findRect_shallow_aux(tree, node->left, rect, results, pNumWritten);
+                tree_findRect_shallow_aux(tree, node->right, rect, results, pNumWritten);
             }
             else {
-                hit_findRect_shallow_aux(tree, node->right, rect, results, numWritten);
+                tree_findRect_shallow_aux(tree, node->right, rect, results, pNumWritten);
             }
         }
     }
     else {
-        results[*numWritten] = node->buf;
-        *numWritten += 1;
+        if(*pNumWritten < SEARCHBUFSIZE){
+            results[*pNumWritten] = node->buf;
+            *pNumWritten += 1;
+        }
+        else{
+            orb_logf(PRIORITY_ERR, "INSUFFICIENT SPACE FOR RETURNING THE RANGE QUERY");
+        }
     }
 }
 /*
 Return all the buffers containing the area specified by `rect`.
-Expects you to provide a buffer of at least 12 * `sizeof(object*)`
+Expects a buffer of at least 12 * `sizeof(object*)`.
 Returns the number of buffers found. The number ranges from 0 to 12.
 Traverses from the top of the tree - when it's shallower than 8 levels,
 its beter than the deep version.
 `node` is not required, its just for compatibility with the deep version
 */
-int hit_findRect_shallow(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12]){
+int tree_findRect_shallow(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12]){
     unsigned numWritten = 0;
-    hit_findRect_shallow_aux(tree, node, rect, results, &numWritten);
+    tree_findRect_shallow_aux(tree, node, rect, results, &numWritten);
     return numWritten;
 }
 
 /*
 Return all the buffers containing the area specified by `rect`.
 Expects you to provide a buffer of at least 12 * sizeof(object*)
+and the node you are querying from, as it's a local search.
 Returns the number of buffers found. The number ranges from 0 to 12.
-Goes up the tree, until it proves that there are no more splits upstream.
+Goes up the tree, until it proves that the query does not split upstream.
 Then it descends in the same way as shallow. Efficient when faced with
 deep trees (at least 8 levels). 2x less efficient than the shallow version
 if the tree is <4 levels deep, then it slowly tips in favour of the deep version

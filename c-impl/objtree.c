@@ -259,7 +259,8 @@ int tree_splitNode(objTree* tree, treeNode* node){
                 (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
                 :
                 (point){ .x = node->bindrect.highhigh.x, .y = node->split.value}
-        }
+        },
+        .level = node->level + 1,
     };
     *(node->right) = (treeNode){
         .buf = tree_allocate(tree->objectAllocPool, sizeof(object)*OBJBUFSIZE),
@@ -271,7 +272,8 @@ int tree_splitNode(objTree* tree, treeNode* node){
                 :
                 (point){ .x = node->bindrect.lowlow.x, .y = node->split.value},
             .highhigh = node->bindrect.highhigh
-        }
+        },
+        .level = node->level + 1,
     };
     tree->bufCount++;
     orb_logf(PRIORITY_TRACE,"Parent node has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
