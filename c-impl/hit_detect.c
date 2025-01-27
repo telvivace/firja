@@ -5,7 +5,7 @@
 #define SQUARE(x) ((x)*(x))
 
 //documentation in the runner function below
-static void tree_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12], unsigned* pNumWritten){
+static void tree_findRect_shallow_aux(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static SEARCHBUFSIZE], unsigned* pNumWritten){
     if(!node->buf){
         if(node->split.isx) {
             if(rect.offset.x + rect.extent.width < node->split.value){
@@ -50,7 +50,7 @@ Traverses from the top of the tree - when it's shallower than 8 levels,
 its beter than the deep version.
 `node` is not required, its just for compatibility with the deep version
 */
-int tree_findRect_shallow(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static 12]){
+int tree_findRect_shallow(objTree* tree, treeNode* node __attribute__((unused)), rect_ofex rect, object* results[static SEARCHBUFSIZE]){
     unsigned numWritten = 0;
     tree_findRect_shallow_aux(tree, node, rect, results, &numWritten);
     return numWritten;
@@ -66,7 +66,7 @@ Then it descends in the same way as shallow. Efficient when faced with
 deep trees (at least 8 levels). 2x less efficient than the shallow version
 if the tree is <4 levels deep, then it slowly tips in favour of the deep version
 */
-int tree_findRect_deep(objTree* tree, treeNode* node, rect_ofex query, object* results[static 12]){
+int tree_findRect_deep(objTree* tree, treeNode* node, rect_ofex query, object* results[static SEARCHBUFSIZE]){
     return 0;
 }
 //recursive function for hit detection
