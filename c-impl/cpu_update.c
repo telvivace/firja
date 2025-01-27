@@ -19,10 +19,6 @@ int vector_update_aux(objTree* tree, treeNode* node){
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         orb_logf(PRIORITY_BLANK,"%d..", i);
         object* obj = node->buf + i;
-        if(!obj){
-            orb_logf(PRIORITY_ERR,"OBJECT NUMBER %d IS NULL!", i);
-            continue;
-        }
         if(obj->hit) {
             orb_logf(PRIORITY_TRACE,"object velocity is x:%f y:%f", obj->v.x, obj->v.y);
             speed v_cm = {
@@ -42,16 +38,18 @@ int vector_update_aux(objTree* tree, treeNode* node){
             obj->hit->hit = 0;
             obj->hit = 0;
         }
+        obj->v.y += GRAVITY; //because SDL2 has 0,0 on the top
         //hardcoded borders of a box so that things don't just fly apart
-        if((obj->x > RIGHTBORDER && obj->v.x > 0) || (obj->x < LEFTBORDER && obj->v.x < 0)) obj->v.x *= -1;
-        if((obj->y > TOPBORDER && obj->v.y > 0) || (obj->y < BOTTOMBORDER && obj->v.y < 0)) obj->v.y *= -1;
+        if((obj->x > RIGHTBORDER && obj->v.x > 0) || (obj->x < LEFTBORDER && obj->v.x < 0)) obj->v.x *= -BOUNCE;
+        if((obj->y > TOPBORDER && obj->v.y > 0) || (obj->y < BOTTOMBORDER && obj->v.y < 0)) obj->v.y *= -BOUNCE;
         if(obj->s){
+            tree->validObjCount++;
             if((obj->x > node->bindrect.highhigh.x || obj->x < node->bindrect.lowlow.x || obj->y > node->bindrect.highhigh.y || obj->y < node->bindrect.lowlow.y)){
                 orb_logf(PRIORITY_TRACE,"(%lf, %lf) is outside (%lf, %lf) x (%lf, %lf)", obj->x, obj->y, node->bindrect.lowlow.x, node->bindrect.lowlow.y, node->bindrect.highhigh.x, node->bindrect.highhigh.y);
                 tree_insertObject(tree, obj);
                 memset(obj, '\0', sizeof(object));
                 node->places |= 1UL << i; //mark this place as vacant
-        }
+            }
         }
         
 

@@ -1,11 +1,8 @@
 #ifndef OBJTREE_H
 #define OBJTREE_H
-#define OBJBUFSIZE 16 //max 64 elements, governed by implementation
-#define OBJBUFFULLMASK 65535 //2^(OBJBUFSIZE)-1
-#define MAXOBJSIZE 20
-#define SEARCHBUFSIZE 40
-#include "tree_alloc.h"
 #include <stdint.h>
+#include "tree_alloc.h"
+#include "settings.h"
 typedef struct {
     float x;
     float y;
@@ -60,8 +57,9 @@ struct objTree {
     tree_allocPool objectAllocPool;
     tree_allocPool nodeAllocPool;
     treeNode* root;
-    treeNode** searchbuf;
+    object** searchbuf;
     unsigned bufCount;
+    unsigned long validObjCount;
 };
 typedef struct objTree objTree;
 /*

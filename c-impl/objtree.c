@@ -12,7 +12,7 @@ objTree* tree_initTree(){
     orb_logf(PRIORITY_DBUG,"alloc metadata");
     objTree* pMetadataStruct = tree_allocate(nodepool, sizeof(objTree));
     orb_logf(PRIORITY_DBUG,"alloc searchbuf");
-    treeNode** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(treeNode*));
+    object** searchbuf = tree_allocate(nodepool, SEARCHBUFSIZE*sizeof(object*));
     orb_logf(PRIORITY_DBUG,"alloc root node");
     treeNode* pRoot = tree_allocate(nodepool, sizeof(treeNode));
     orb_logf(PRIORITY_DBUG,"alloc root node buf");
@@ -193,7 +193,7 @@ int tree_insertObject(objTree* tree, object* obj){
     treeNode* parentNode = tree_findParentNode(tree, obj);
     orb_logf(PRIORITY_DBUG,"found a parent node");
     orb_logf(PRIORITY_TRACE,"places: %lx", parentNode->places);
-    orb_logf(PRIORITY_TRACE,"comparison: %x", OBJBUFFULLMASK);
+    orb_logf(PRIORITY_TRACE,"comparison: %lx", OBJBUFFULLMASK);
     if(!(OBJBUFFULLMASK & parentNode->places)) { //buffer is full
         orb_logf(PRIORITY_DBUG,"splitting a node");
         if(tree_splitNode(tree, parentNode) != 0) return 1; 

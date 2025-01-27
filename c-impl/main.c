@@ -12,13 +12,17 @@
 #include <string.h>
 #include <signal.h>
 #include "liblogs.h"
-#define ever ;;
 volatile unsigned long frames = 0; //for diagnostic purposes
 struct timespec starttime = {}; //so it can be printed out if interrupted
 struct timespec stoptime = {}; //so it can be printed out if interrupted
 void printFramesAtInterrupt(int signal){
     timespec_get(&stoptime, TIME_UTC);
-    orb_logf(PRIORITY_ERR, "Interrupted by signal.");
+    if(signal == SIGSEGV){
+        orb_logf(PRIORITY_ERR, "Segmentation fault!");
+    }
+    else {
+        orb_logf(PRIORITY_OK, "Interrupted.");
+    }
     orb_logf(PRIORITY_OK, "Frames rendered: %ld", frames);
     unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000 + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
     orb_logf(PRIORITY_OK,"Average FPS: %f", (double)frames/((double)deltatime / 1000000));
@@ -167,8 +171,10 @@ int main(int argc, char* argv[static 1]){
     unsigned running = 1;
 
 
-    unsigned cycles = 0;
+    unsigned long cycles = 0;
     timespec_get(&starttime, TIME_UTC);
+    struct timespec dynamictime;
+    struct timespec dynamictime_prev = starttime;
     while(running){
         #if GRAPHICS_ON == 1
         while (SDL_PollEvent(&e) != 0) {
@@ -179,6 +185,7 @@ int main(int argc, char* argv[static 1]){
         }
         #endif
         hit_flagObjects(globalInfo->tree);
+        globalInfo->tree->validObjCount = 0;
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
         if(limitedcycles == 1 && cycles > maxcycles) running = 0;
@@ -201,8 +208,13 @@ int main(int argc, char* argv[static 1]){
         SDL_Delay(12); // ~60 FPS
         #endif
         if(limitedcycles){
-            printf("\rProgress: %3f%%", (float)cycles/(float)maxcycles * 100);
-            fflush(stdout);
+            timespec_get(&dynamictime, TIME_UTC);
+            printf("\rProgress: %3f%%, Average FPS: %f FPS: %ld Object count: %ld", (float)cycles/(float)maxcycles * 100, 
+            (double)cycles/((double)((dynamictime.tv_sec  - starttime.tv_sec)  * 1000000
+                       + (dynamictime.tv_nsec - starttime.tv_nsec) / 1000) / 1000000), 1000000/(unsigned long)(((dynamictime.tv_sec  - dynamictime_prev.tv_sec)  * 1000000
+                       + (dynamictime.tv_nsec - dynamictime_prev.tv_nsec) / 1000)), globalInfo->tree->validObjCount);
+            //fflush(stdout);
+            dynamictime_prev = dynamictime;
         }
         cycles++;
         frames++;
