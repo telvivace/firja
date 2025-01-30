@@ -31,6 +31,7 @@ struct object {
     unsigned m;
     struct object* hit; //optional pointer to an object currently overlapping this one
     unsigned long id;
+    unsigned flags;
 };
 typedef struct object object;
 struct treeSplit {
@@ -50,7 +51,11 @@ struct treeNode {
     unsigned level; //how deep is the node within the tree
 };
 typedef struct treeNode treeNode;
-
+typedef struct {
+    unsigned nodecount;
+    unsigned allocated;
+    treeNode** nodes;
+} treeOptimizationQueue;
 struct objTree {
     unsigned depth;
     unsigned searchbufsize;
@@ -60,6 +65,8 @@ struct objTree {
     object** searchbuf;
     unsigned bufCount;
     unsigned long validObjCount;
+    unsigned long relocations;
+    treeOptimizationQueue opt_queue;
 };
 typedef struct objTree objTree;
 /*
