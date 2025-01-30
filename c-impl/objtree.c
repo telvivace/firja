@@ -22,8 +22,8 @@ objTree* tree_initTree(){
         .places = ~0UL,
         .split.isx = 1,
         .bindrect = (rect_llhh){
-            .lowlow = (point){.x = LEFTBORDER - 20, .y = BOTTOMBORDER - 20},
-            .highhigh = (point){.x = RIGHTBORDER + 20, .y = TOPBORDER + 20}
+            .lowlow = (point){.x = g_leftborder - 20, .y = g_bottomborder - 20},
+            .highhigh = (point){.x = g_rightborder + 20, .y = g_topborder + 20}
         }
     };
     *pMetadataStruct = (objTree){
@@ -133,6 +133,7 @@ int tree_balanceBuffers(treeNode* parent, treeNode* left_child, treeNode* right_
 this function expects that the buffers of the parent and exactly one child are identical in order to save space.
 */
 int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right_child){
+    orb_logf(PRIORITY_DBUG,"==================\ntree_balanceBuffers2:");
     treeNode* dest = (void*)0;
     treeNode* reused = (void*)0;
     if(parent->buf == left_child->buf){ 
@@ -145,7 +146,7 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         reused = right_child;
         orb_logf(PRIORITY_TRACE,"right child buf == parent buf ");
     }  
-    orb_logf(PRIORITY_DBUG,"==================\ntree_balanceBuffers2:");
+    
     orb_logf(PRIORITY_TRACE,"parent's places: %lx", parent->places);
     
     orb_logf(PRIORITY_TRACE,"New split is now set at %c=%lf", parent->split.isx ? 'x' : 'y', parent->split.value);
