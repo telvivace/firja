@@ -25,7 +25,7 @@ profile: $(TARGET)
 debug: CFLAGS += -fsanitize=address,undefined,leak
 debug: $(TARGET)
 
-release: CFLAGS = -std=c2x -O3 -fprofile-use -fprofile-correction
+release: CFLAGS = -std=c2x -O3 -fprofile-use
 release: $(TARGET)
 # Link test file with object files
 $(TESTS): $(OBJ) $(TESTSRC)
