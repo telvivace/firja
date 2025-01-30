@@ -283,6 +283,27 @@ int tree_splitNode(objTree* tree, treeNode* node){
 
     orb_logf(PRIORITY_DBUG, "allocated buffers");
     tree_balanceBuffers2(node, node->left, node->right);
+    #if DBUG_MODE == 1
+    //check if the number of objects in both buffers is correct
+    unsigned realcountL = 0;
+    unsigned realcountR = 0;
+    for(unsigned i = 0; i < OBJBUFSIZE; i++){
+        if(node->left->buf[i].s) realcountL++;
+        if(node->right->buf[i].s) realcountR++;
+    }
+    unsigned papercountL = 0;
+    unsigned papercountR = 0;
+    for(unsigned i = 0; i < OBJBUFSIZE; i++){
+        if(!(node->left->places & 1UL << i)) papercountL++;
+        if(!(node->right->places & 1UL << i)) papercountR++;
+    }
+    if(papercountL != realcountL || papercountR != realcountR || (papercountL + papercountR) != OBJBUFSIZE){
+        orb_log(PRIORITY_WARN, "Object count mismatch detected!");
+        orb_logf(PRIORITY_WARN, "Count on paper: %d(L) + %d(R). Real count: %d(L) + %d(R). Both supposed to be %d(L+R).", papercountL, papercountR, realcountL, realcountR, OBJBUFSIZE);
+    }
+
+    #endif
+    
     node->buf = (void*)0;
     return 0;
 }
