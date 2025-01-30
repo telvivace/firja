@@ -5,6 +5,7 @@
 #include "objtree.h"
 #include "settings.h"
 #include "liblogs.h"
+#define VECTORUPDATE_SEENBEFORE 1U
 int vector_update_aux(objTree* tree, treeNode* node){
     orb_logf(PRIORITY_TRACE,"At node: %p", node);
     if(!node->buf){
@@ -13,6 +14,10 @@ int vector_update_aux(objTree* tree, treeNode* node){
         vector_update_aux(tree, node->right);
         orb_logf(PRIORITY_TRACE,"UP ( %p -> %p)", node, node->up);
         return 0;
+    }
+    unsigned numObjects = 8 * sizeof(node->places) - __builtin_popcountl(node->places); //count the number of zeros
+    if(numObjects <= ((unsigned)OBJBUFSIZE / 4U)){
+        orb_logf(PRIORITY_WARN, "Node's count is %u/%u", numObjects, OBJBUFSIZE);
     }
     orb_logf(PRIORITY_TRACE,"buffer is valid: %p", node->buf);
     orb_logf(PRIORITY_BLANK,"checking no. ");
@@ -34,7 +39,6 @@ int vector_update_aux(objTree* tree, treeNode* node){
                 .x = (obj->hit->v.x - v_cm.x)*-1 + v_cm.x,
                 .y = (obj->hit->v.y - v_cm.y)*-1 + v_cm.y,
             };
-            //TODO WARN naive?
             obj->hit->hit = 0;
             obj->hit = 0;
         }
@@ -43,12 +47,16 @@ int vector_update_aux(objTree* tree, treeNode* node){
         if((obj->x > RIGHTBORDER && obj->v.x > 0) || (obj->x < LEFTBORDER && obj->v.x < 0)) obj->v.x *= -BOUNCE;
         if((obj->y > TOPBORDER && obj->v.y > 0) || (obj->y < BOTTOMBORDER && obj->v.y < 0)) obj->v.y *= -BOUNCE;
         if(obj->s){
-            tree->validObjCount++;
+            if(!(obj->flags & VECTORUPDATE_SEENBEFORE)){
+                tree->validObjCount++;
+                obj->flags |= VECTORUPDATE_SEENBEFORE;
+            }
             if((obj->x > node->bindrect.highhigh.x || obj->x < node->bindrect.lowlow.x || obj->y > node->bindrect.highhigh.y || obj->y < node->bindrect.lowlow.y)){
                 orb_logf(PRIORITY_TRACE,"(%lf, %lf) is outside (%lf, %lf) x (%lf, %lf)", obj->x, obj->y, node->bindrect.lowlow.x, node->bindrect.lowlow.y, node->bindrect.highhigh.x, node->bindrect.highhigh.y);
                 tree_insertObject(tree, obj);
                 memset(obj, '\0', sizeof(object));
                 node->places |= 1UL << i; //mark this place as vacant
+                tree->relocations++;
             }
         }
         
@@ -75,7 +83,8 @@ int scalar_update_aux(treeNode* node){
     orb_logf(PRIORITY_BLANK,"checking no. ");
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         orb_logf(PRIORITY_BLANK,"%d..", i);
-        object* obj = node->buf + i;    
+        object* obj = node->buf + i;
+        obj->flags = 0;   
         obj->x += obj->v.x;
         obj->y += obj->v.y;
     }

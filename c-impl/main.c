@@ -15,6 +15,10 @@
 volatile unsigned long frames = 0; //for diagnostic purposes
 struct timespec starttime = {}; //so it can be printed out if interrupted
 struct timespec stoptime = {}; //so it can be printed out if interrupted
+double g_leftborder = LEFTBORDER; //   provide definitions for the
+double g_rightborder = RIGHTBORDER; // header-declared modifiable borders
+double g_topborder = TOPBORDER; //     the macros are default values.
+double g_bottomborder = BOTTOMBORDER;
 void printFramesAtInterrupt(int signal){
     timespec_get(&stoptime, TIME_UTC);
     if(signal == SIGSEGV){
@@ -119,6 +123,10 @@ int main(int argc, char* argv[static 1]){
         limitedcycles = 1;
         orb_logf(PRIORITY_OK,"limited cycles to %ld.", maxcycles);
     }
+    double simulationDimensions = sqrt(15000 * numObjects);
+    g_rightborder = simulationDimensions;
+    g_topborder = simulationDimensions;
+    orb_logf(PRIORITY_WARN, "x:%lf -- %lf y:%lf -- %lf", g_leftborder, g_rightborder, g_bottomborder, g_topborder);
     orb_logf(PRIORITY_DBUG,"start of main");
     globalInformation* globalInfo = calloc(1, sizeof(globalInformation));
     globalInfo->bufferCount = 3;
@@ -184,11 +192,12 @@ int main(int argc, char* argv[static 1]){
             }
         }
         #endif
+        if(limitedcycles == 1 && cycles >= maxcycles) break;
         hit_flagObjects(globalInfo->tree);
         globalInfo->tree->validObjCount = 0;
+        globalInfo->tree->relocations = 0;
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
-        if(limitedcycles == 1 && cycles > maxcycles) running = 0;
         #if GRAPHICS_ON == 1
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -207,17 +216,18 @@ int main(int argc, char* argv[static 1]){
         // Delay to cap frame rate
         SDL_Delay(12); // ~60 FPS
         #endif
+        cycles++;
+        frames++;
         if(limitedcycles){
             timespec_get(&dynamictime, TIME_UTC);
-            printf("\rProgress: %3f%%, Average FPS: %f FPS: %ld Object count: %ld", (float)cycles/(float)maxcycles * 100, 
+            printf("\rProgress: %3f%%, Average FPS: %f FPS: %ld Object count: %ld           ", (float)cycles/(float)maxcycles * 100, 
             (double)cycles/((double)((dynamictime.tv_sec  - starttime.tv_sec)  * 1000000
                        + (dynamictime.tv_nsec - starttime.tv_nsec) / 1000) / 1000000), 1000000/(unsigned long)(((dynamictime.tv_sec  - dynamictime_prev.tv_sec)  * 1000000
                        + (dynamictime.tv_nsec - dynamictime_prev.tv_nsec) / 1000)), globalInfo->tree->validObjCount);
-            //fflush(stdout);
+            fflush(stdout);
             dynamictime_prev = dynamictime;
+            if(globalInfo->tree->validObjCount > numObjects) orb_logf(PRIORITY_ERR, "boom bam beowm big bad objects too much for understeawm %lu/%lu, relocations: %lu", globalInfo->tree->validObjCount, numObjects, globalInfo->tree->relocations);
         }
-        cycles++;
-        frames++;
     }
             
     #if GRAPHICS_ON == 1
@@ -227,11 +237,12 @@ int main(int argc, char* argv[static 1]){
     SDL_Quit();
     #endif
 
-    
+    fputc('\n', stdout);
     timespec_get(&stoptime, TIME_UTC);
     unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000
                        + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
-    orb_logf(PRIORITY_OK,"\nAverage FPS: %f", (double)cycles/((double)deltatime / 1000000));
+    orb_logf(PRIORITY_OK,"Average FPS: %f", (double)cycles/((double)deltatime / 1000000));
+    orb_log(PRIORITY_OK, "Reinsertions:", globalInfo->tree->relocations);
     #if DBUG_MODE == 1
     tree_printTree(globalInfo->tree);
     #endif
