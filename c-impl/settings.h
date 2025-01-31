@@ -14,6 +14,10 @@
 //negative values will make things sink into the walls
  #define BOUNCE 1
 
+extern double g_leftborder;
+extern double g_rightborder;
+extern double g_topborder;
+extern double g_bottomborder;
 // Screen dimensions
  #define SCREEN_WIDTH 1200
  #define SCREEN_HEIGHT 900
