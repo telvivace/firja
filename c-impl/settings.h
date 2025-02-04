@@ -5,6 +5,11 @@
  #define RIGHTBORDER 1200
  #define TOPBORDER 900
  #define BOTTOMBORDER 0
+
+extern double g_leftborder;
+extern double g_rightborder;
+extern double g_topborder;
+extern double g_bottomborder;
 //Gravity (substracted from y vector component)
 //note: actually gravity is added to the vector,
 //because SDL2 has (0,0) on the top left, so it's
@@ -27,7 +32,7 @@
 //tree settings
  #define MAXOBJSIZE 20
  #define SEARCHBUFSIZE 40
- #define OBJBUFSIZE 8 //max 64 elements, governed by implementation
+ #define OBJBUFSIZE 16 //max 64 elements, governed by implementation
  #define OBJBUFFULLMASK ((1UL << OBJBUFSIZE) - 1)
 
 #endif

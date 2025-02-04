@@ -139,8 +139,8 @@ int main(int argc, char* argv[static 1]){
         tree_insertObject(globalInfo->tree, &(object){
             .m = 5, 
             .s = 5, 
-            .x = rand() % (RIGHTBORDER - LEFTBORDER - 10) + 5,
-            .y = rand() % (TOPBORDER - BOTTOMBORDER- 10) + 5,
+            .x = rand() % ((unsigned long)g_rightborder - (unsigned long)g_leftborder - 10) + 5,
+            .y = rand() % ((unsigned long)g_topborder - (unsigned long)g_bottomborder- 10) + 5,
             .v = (speed){
                 .x = ((rand() % 10) - 5) / 2.0f,
                 .y = ((rand() % 10) - 5) / 2.0f,
@@ -198,6 +198,7 @@ int main(int argc, char* argv[static 1]){
         globalInfo->tree->relocations = 0;
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
+        tree_optimizeNodes(globalInfo->tree);
         #if GRAPHICS_ON == 1
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -214,16 +215,16 @@ int main(int argc, char* argv[static 1]){
         // Present rendered frame
         SDL_RenderPresent(renderer);
         // Delay to cap frame rate
-        SDL_Delay(12); // ~60 FPS
+        SDL_Delay(10); // ~60 FPS
         #endif
         cycles++;
         frames++;
         if(limitedcycles){
             timespec_get(&dynamictime, TIME_UTC);
-            printf("\rProgress: %3f%%, Average FPS: %f FPS: %ld Object count: %ld           ", (float)cycles/(float)maxcycles * 100, 
+            printf("\rProgress: %3f%%, Average FPS: %f FPS: %lf Object count: %.1ld Opt_queue length: %u           ", (float)cycles/(float)maxcycles * 100, 
             (double)cycles/((double)((dynamictime.tv_sec  - starttime.tv_sec)  * 1000000
-                       + (dynamictime.tv_nsec - starttime.tv_nsec) / 1000) / 1000000), 1000000/(unsigned long)(((dynamictime.tv_sec  - dynamictime_prev.tv_sec)  * 1000000
-                       + (dynamictime.tv_nsec - dynamictime_prev.tv_nsec) / 1000)), globalInfo->tree->validObjCount);
+                       + (dynamictime.tv_nsec - starttime.tv_nsec) / 1000) / 1000000), 1000000/(double)(((dynamictime.tv_sec  - dynamictime_prev.tv_sec)  * 1000000
+                       + (dynamictime.tv_nsec - dynamictime_prev.tv_nsec) / 1000)), globalInfo->tree->validObjCount, globalInfo->tree->opt_queue.nodecount);
             fflush(stdout);
             dynamictime_prev = dynamictime;
             if(globalInfo->tree->validObjCount > numObjects) orb_logf(PRIORITY_ERR, "boom bam beowm big bad objects too much for understeawm %lu/%lu, relocations: %lu", globalInfo->tree->validObjCount, numObjects, globalInfo->tree->relocations);
