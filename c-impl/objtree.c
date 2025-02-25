@@ -23,8 +23,8 @@ objTree* tree_initTree(){
         .places = ~0UL,
         .split.isx = 1,
         .bindrect = (rect_llhh){
-            .lowlow = (point){.x = g_leftborder - 20, .y = g_bottomborder - 20},
-            .highhigh = (point){.x = g_rightborder + 20, .y = g_topborder + 20}
+            .lowlow = (point){.x = g_leftborder - 200, .y = g_bottomborder - 200},
+            .highhigh = (point){.x = g_rightborder + 200, .y = g_topborder + 200}
         }
     };
     *pMetadataStruct = (objTree){
@@ -169,7 +169,7 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         coordoffset = offsetof(object, y);
 
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
-        tree_printObject(parent->buf + i);
+        tree_printObject(PRIORITY_TRACE, parent->buf + i);
         orb_logf(PRIORITY_TRACE,"values compared: %c = %lf and average = %lf", 
             parent->split.isx ? 'x' : 'y', 
             *(double*)( (unsigned char*)&(parent->buf[i]) + coordoffset ),
@@ -238,6 +238,7 @@ int tree_optimizeNodes(objTree* tree){
             node1->flags &= ~(NFLAG_IN_OPTQUEUE);
             tree->opt_queue.nodes[i] = (treeNode*)0; 
             tree->opt_queue.nodecount--;
+            continue;
         }
         treeNode* node2;
         if(node1->up->left == node1) node2 = node1->up->right;
@@ -298,7 +299,8 @@ int tree_optimizeNodes(objTree* tree){
                 orb_logf(PRIORITY_WARN, "parent buffer: %p", dest->up->buf);
                 orb_logf(PRIORITY_WARN, "src places: %lx", src->places);
                 orb_logf(PRIORITY_WARN, "Parent node object count / sum of two children: %u/%u, %lx ",  __builtin_popcountl(~(node1->up->places)), numObjects1 + numObjects2, node1->up->places);
-            
+                orb_logf(PRIORITY_WARN, "Parent buffer:");
+                tree_printBufferContents(PRIORITY_WARN, node1->up->buf);
             }
 
             #endif
