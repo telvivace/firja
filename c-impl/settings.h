@@ -34,5 +34,6 @@ extern double g_bottomborder;
  #define SEARCHBUFSIZE 40
  #define OBJBUFSIZE 16 //max 64 elements, governed by implementation
  #define OBJBUFFULLMASK ((1UL << OBJBUFSIZE) - 1)
-
+ #define RECYCLE 0
+ #define BUILD_TREE_DUMB 0 //builds the tree linearly => very inefficient
 #endif

@@ -198,7 +198,9 @@ int main(int argc, char* argv[static 1]){
         globalInfo->tree->relocations = 0;
         vector_update(globalInfo->tree);
         scalar_update(globalInfo->tree);
+        #if RECYCLE == 1
         tree_optimizeNodes(globalInfo->tree);
+        #endif
         #if GRAPHICS_ON == 1
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
