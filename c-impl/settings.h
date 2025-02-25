@@ -28,7 +28,8 @@ extern double g_bottomborder;
  #define GRAPHICS_ON 1
 // Debug mode (0/1)
  #define DBUG_MODE 0
-
+// Collect timing data and write it out (0/1)
+ #define BEING_TIMED 1
 //tree settings
  #define MAXOBJSIZE 20
  #define SEARCHBUFSIZE 40

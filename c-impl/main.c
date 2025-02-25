@@ -88,16 +88,16 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
         .h = node->bindrect.highhigh.y - node->bindrect.lowlow.y,
     };
     SDL_RenderDrawRect(renderer, &rect);
-        SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
     
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         if(node->buf[i].s){
-                if(node->buf[i].id == 24){
-                    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-                    drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
-                    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
-                    continue;
-                }
+            if(node->buf[i].id == 24){
+                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+                drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
+                SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+                continue;
+            }
             orb_logf(PRIORITY_TRACE,"draw at x:%lf y:%lf s:%f  ", node->buf[i].x, node->buf[i].y, node->buf[i].s);
             drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
         }
@@ -123,6 +123,23 @@ int main(int argc, char* argv[static 1]){
         limitedcycles = 1;
         orb_logf(PRIORITY_OK,"limited cycles to %ld.", maxcycles);
     }
+    #if BEING_TIMED == 1
+    if(!limitedcycles){
+        orb_log(PRIORITY_ERR, "Function timing can be performed only with limited frames.");
+        exit(1);
+    }
+    //those are time intervals, measured in microseconds. Max time interval
+    //for one entry is 71 minutes which is more than enough for this.
+    //This way, performance over time can be graphed.
+    unsigned* hit_detect_time = calloc(1, sizeof(unsigned)*maxcycles);
+    unsigned* vector_time = calloc(1, sizeof(unsigned)*maxcycles);
+    unsigned* scalar_time = calloc(1, sizeof(unsigned)*maxcycles);
+    unsigned* insertion_time = calloc(1, sizeof(unsigned)*maxcycles);
+    unsigned* optimization_time = calloc(1, sizeof(unsigned)*maxcycles);
+    unsigned* wholeframe_time = calloc(1, sizeof(unsigned)*maxcycles);
+    struct timespec measure_starttime = { 0 };
+    struct timespec measure_endtime = { 0 };
+    #endif
     double simulationDimensions = sqrt(15000 * numObjects);
     g_rightborder = simulationDimensions;
     g_topborder = simulationDimensions;
@@ -133,12 +150,31 @@ int main(int argc, char* argv[static 1]){
     orb_logf(PRIORITY_DBUG,"init tree");
     globalInfo->tree = tree_initTree();
     orb_logf(PRIORITY_DBUG,"start loop");
+    #if BUILD_TREE_DUMB == 1
     for(unsigned i = 0; i < numObjects; i++){
         orb_logf(PRIORITY_TRACE, "iteration %d", i);
         orb_logf(PRIORITY_TRACE,"inserting object with id %d", i);
         tree_insertObject(globalInfo->tree, &(object){
             .m = 5, 
             .s = 5, 
+            .x = i*((simulationDimensions)/numObjects - 40),
+            .y = i*((simulationDimensions)/numObjects - 40),
+            .v = (speed){
+                .x = ((rand() % 10) - 5) / 2.0f,
+                .y = ((rand() % 10) - 5) / 2.0f,
+            },
+            .id = i,
+        });
+        globalInfo->objectCount++;
+    }
+    #else
+    
+    for(unsigned i = 0; i < numObjects; i++){
+        orb_logf(PRIORITY_TRACE, "iteration %d", i);
+        orb_logf(PRIORITY_TRACE,"inserting object with id %d", i);
+        tree_insertObject(globalInfo->tree, &(object){
+            .m = 5,//rand() % 15 + 4, 
+            .s = 5,//rand() % (MAXOBJSIZE-5) + 5, 
             .x = rand() % ((unsigned long)g_rightborder - (unsigned long)g_leftborder - 10) + 5,
             .y = rand() % ((unsigned long)g_topborder - (unsigned long)g_bottomborder- 10) + 5,
             .v = (speed){
@@ -149,6 +185,7 @@ int main(int argc, char* argv[static 1]){
         });
         globalInfo->objectCount++;
     }
+    #endif
     #if DBUG_MODE == 1
     tree_printTree(globalInfo->tree);
     tree_printTreeBoxes(globalInfo->tree);
@@ -183,6 +220,10 @@ int main(int argc, char* argv[static 1]){
     timespec_get(&starttime, TIME_UTC);
     struct timespec dynamictime;
     struct timespec dynamictime_prev = starttime;
+    #if BEING_TIMED == 1
+    unsigned sec_diff = 0;
+    long nsec_diff = 0;
+    #endif
     while(running){
         #if GRAPHICS_ON == 1
         while (SDL_PollEvent(&e) != 0) {
@@ -193,13 +234,50 @@ int main(int argc, char* argv[static 1]){
         }
         #endif
         if(limitedcycles == 1 && cycles >= maxcycles) break;
+        #if BEING_TIMED == 1
+        timespec_get(&measure_starttime, TIME_UTC);
+        #endif
         hit_flagObjects(globalInfo->tree);
+        #if BEING_TIMED == 1
+         timespec_get(&measure_endtime, TIME_UTC);
+         sec_diff = measure_endtime.tv_sec - measure_starttime.tv_sec;
+         nsec_diff = measure_endtime.tv_nsec - measure_starttime.tv_nsec;
+         // Convert to microseconds and write
+         hit_detect_time[cycles] = (sec_diff * 1000000U) + (nsec_diff / 1000U);
+        #endif
         globalInfo->tree->validObjCount = 0;
         globalInfo->tree->relocations = 0;
+        #if BEING_TIMED == 1
+         timespec_get(&measure_starttime, TIME_UTC);
+        #endif
         vector_update(globalInfo->tree);
+        #if BEING_TIMED == 1
+         timespec_get(&measure_endtime, TIME_UTC);
+         sec_diff = measure_endtime.tv_sec - measure_starttime.tv_sec;
+         nsec_diff = measure_endtime.tv_nsec - measure_starttime.tv_nsec;
+         vector_time[cycles] = (sec_diff * 1000000U) + (nsec_diff / 1000U);
+        #endif
+        #if BEING_TIMED == 1
+         timespec_get(&measure_starttime, TIME_UTC);
+        #endif
         scalar_update(globalInfo->tree);
+        #if BEING_TIMED == 1
+         timespec_get(&measure_endtime, TIME_UTC);
+         sec_diff = measure_endtime.tv_sec - measure_starttime.tv_sec;
+         nsec_diff = measure_endtime.tv_nsec - measure_starttime.tv_nsec;
+         scalar_time[cycles] = (sec_diff * 1000000U) + (nsec_diff / 1000U);
+        #endif
+        #if BEING_TIMED == 1
+         timespec_get(&measure_starttime, TIME_UTC);
+        #endif
         #if RECYCLE == 1
         tree_optimizeNodes(globalInfo->tree);
+        #endif
+        #if BEING_TIMED == 1
+         timespec_get(&measure_endtime, TIME_UTC);
+         sec_diff = measure_endtime.tv_sec - measure_starttime.tv_sec;
+         nsec_diff = measure_endtime.tv_nsec - measure_starttime.tv_nsec;
+         optimization_time[cycles] = (sec_diff * 1000000U) + (nsec_diff / 1000U);
         #endif
         #if GRAPHICS_ON == 1
         // Clear screen
@@ -219,10 +297,16 @@ int main(int argc, char* argv[static 1]){
         // Delay to cap frame rate
         SDL_Delay(10); // ~60 FPS
         #endif
+
         cycles++;
         frames++;
         if(limitedcycles){
             timespec_get(&dynamictime, TIME_UTC);
+            #if BEING_TIMED == 1
+             sec_diff = dynamictime.tv_sec - dynamictime_prev.tv_sec;
+             nsec_diff = dynamictime.tv_nsec - dynamictime_prev.tv_nsec;
+             wholeframe_time[cycles] = (sec_diff * 1000000U) + (nsec_diff / 1000U);
+            #endif
             printf("\rProgress: %3f%%, Average FPS: %f FPS: %lf Object count: %.1ld Opt_queue length: %u           ", (float)cycles/(float)maxcycles * 100, 
             (double)cycles/((double)((dynamictime.tv_sec  - starttime.tv_sec)  * 1000000
                        + (dynamictime.tv_nsec - starttime.tv_nsec) / 1000) / 1000000), 1000000/(double)(((dynamictime.tv_sec  - dynamictime_prev.tv_sec)  * 1000000
@@ -230,6 +314,16 @@ int main(int argc, char* argv[static 1]){
             fflush(stdout);
             dynamictime_prev = dynamictime;
             if(globalInfo->tree->validObjCount > numObjects) orb_logf(PRIORITY_ERR, "boom bam beowm big bad objects too much for understeawm %lu/%lu, relocations: %lu", globalInfo->tree->validObjCount, numObjects, globalInfo->tree->relocations);
+            #if BEING_TIMED == 1
+                char filename[256];  // Make sure the buffer is large enough
+                snprintf(filename, sizeof(filename), "timing_%s.csv", argv[3]);
+                tree_writeUintBufferToFile(hit_detect_time, maxcycles, "data/mult/hit/", filename);
+                tree_writeUintBufferToFile(vector_time, maxcycles, "data/mult/vec/", filename);
+                tree_writeUintBufferToFile(scalar_time, maxcycles, "data/mult/scal/", filename);
+                tree_writeUintBufferToFile(insertion_time, maxcycles, "data/mult/ins/", filename);
+                tree_writeUintBufferToFile(optimization_time, maxcycles, "data/mult/opt/", filename);
+                tree_writeUintBufferToFile(wholeframe_time, maxcycles, "data/mult/frame/", filename);
+            #endif
         }
     }
             
