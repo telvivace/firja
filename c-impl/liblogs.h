@@ -1,5 +1,5 @@
-#ifndef ORBLOG_C
-#define ORBLOG_C
+#ifndef ORBLOG_H
+#define ORBLOG_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
