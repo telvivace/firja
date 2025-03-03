@@ -30,7 +30,7 @@ void printFramesAtInterrupt(int signal){
     orb_logf(PRIORITY_OK, "Frames rendered: %ld", frames);
     unsigned long deltatime = (stoptime.tv_sec  - starttime.tv_sec)  * 1000000 + (stoptime.tv_nsec - starttime.tv_nsec) / 1000 ;
     orb_logf(PRIORITY_OK,"Average FPS: %f", (double)frames/((double)deltatime / 1000000));
-    exit(EXIT_SUCCESS);
+    exit(EXIT_FAILURE);
 }
 #if GRAPHICS_ON
 // Function to draw a circle using the Midpoint Circle Algorithm
@@ -61,7 +61,8 @@ void drawCircle(SDL_Renderer* renderer, int centerX, int centerY, int radius) {
 }
 void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
     if(!node->buf){
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         orb_logf(PRIORITY_TRACE,"node rect at x: %lf -- %lf  y : %lf -- %lf", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
         SDL_Rect rect = {
             .x = node->bindrect.lowlow.x,
@@ -79,7 +80,7 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
         return;
     }
     else {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     orb_logf(PRIORITY_TRACE,"node rect at x: %lf -- %lf  y : %lf -- %lf", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
     SDL_Rect rect = {
         .x = node->bindrect.lowlow.x,
@@ -88,14 +89,14 @@ void renderObjects_rec(treeNode* node, SDL_Renderer* renderer){
         .h = node->bindrect.highhigh.y - node->bindrect.lowlow.y,
     };
     SDL_RenderDrawRect(renderer, &rect);
-    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 120, 0, 120, 255);
     
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
         if(node->buf[i].s){
             if(node->buf[i].id == 24){
-                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+                SDL_SetRenderDrawColor(renderer, 255, 120, 0, 120);
                 drawCircle(renderer, node->buf[i].x, node->buf[i].y, node->buf[i].s);
-                SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+                SDL_SetRenderDrawColor(renderer, 120, 0, 120, 255);
                 continue;
             }
             orb_logf(PRIORITY_TRACE,"draw at x:%lf y:%lf s:%f  ", node->buf[i].x, node->buf[i].y, node->buf[i].s);
@@ -140,7 +141,7 @@ int main(int argc, char* argv[static 1]){
     struct timespec measure_starttime = { 0 };
     struct timespec measure_endtime = { 0 };
     #endif
-    double simulationDimensions = sqrt(15000 * numObjects);
+    double simulationDimensions = sqrt(OBJ_DENSITY * numObjects);
     g_rightborder = simulationDimensions;
     g_topborder = simulationDimensions;
     orb_logf(PRIORITY_WARN, "x:%lf -- %lf y:%lf -- %lf", g_leftborder, g_rightborder, g_bottomborder, g_topborder);
@@ -174,7 +175,7 @@ int main(int argc, char* argv[static 1]){
         orb_logf(PRIORITY_TRACE,"inserting object with id %d", i);
         tree_insertObject(globalInfo->tree, &(object){
             .m = 5,//rand() % 15 + 4, 
-            .s = 5,//rand() % (MAXOBJSIZE-5) + 5, 
+            .s = 10,//rand() % (MAXOBJSIZE-5) + 5, 
             .x = rand() % ((unsigned long)g_rightborder - (unsigned long)g_leftborder - 10) + 5,
             .y = rand() % ((unsigned long)g_topborder - (unsigned long)g_bottomborder- 10) + 5,
             .v = (speed){
@@ -281,7 +282,7 @@ int main(int argc, char* argv[static 1]){
         #endif
         #if GRAPHICS_ON == 1
         // Clear screen
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderClear(renderer);
         orb_logf(PRIORITY_DBUG,"Drawing.");
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -314,19 +315,33 @@ int main(int argc, char* argv[static 1]){
             fflush(stdout);
             dynamictime_prev = dynamictime;
             if(globalInfo->tree->validObjCount > numObjects) orb_logf(PRIORITY_ERR, "boom bam beowm big bad objects too much for understeawm %lu/%lu, relocations: %lu", globalInfo->tree->validObjCount, numObjects, globalInfo->tree->relocations);
-            #if BEING_TIMED == 1
-                char filename[256];  // Make sure the buffer is large enough
-                snprintf(filename, sizeof(filename), "timing_%s.csv", argv[3]);
-                tree_writeUintBufferToFile(hit_detect_time, maxcycles, "data/mult/hit/", filename);
-                tree_writeUintBufferToFile(vector_time, maxcycles, "data/mult/vec/", filename);
-                tree_writeUintBufferToFile(scalar_time, maxcycles, "data/mult/scal/", filename);
-                tree_writeUintBufferToFile(insertion_time, maxcycles, "data/mult/ins/", filename);
-                tree_writeUintBufferToFile(optimization_time, maxcycles, "data/mult/opt/", filename);
-                tree_writeUintBufferToFile(wholeframe_time, maxcycles, "data/mult/frame/", filename);
-            #endif
         }
     }
-            
+    #if BEING_TIMED == 1
+     char filename[256];
+     snprintf(filename, sizeof(filename), "timing_%s.csv", argv[3]);
+     tree_writeUintBufferToFile(hit_detect_time, maxcycles, "data/mult/hit/", filename);
+     tree_writeUintBufferToFile(vector_time, maxcycles, "data/mult/vec/", filename);
+     tree_writeUintBufferToFile(scalar_time, maxcycles, "data/mult/scal/", filename);
+     tree_writeUintBufferToFile(insertion_time, maxcycles, "data/mult/ins/", filename);
+     tree_writeUintBufferToFile(optimization_time, maxcycles, "data/mult/opt/", filename);
+     tree_writeUintBufferToFile(wholeframe_time, maxcycles, "data/mult/frame/", filename);
+    
+    FILE *file = fopen("data/mult/sum/timing.csv", "a");
+    if (!file) {
+        orb_log(PRIORITY_ERR, "File could not be opened!");
+    } 
+    fprintf(file, "%u, %u, %u, %u, %u, %u\n",
+        sumUINTs(hit_detect_time, maxcycles),
+        sumUINTs(vector_time, maxcycles),
+        sumUINTs(scalar_time, maxcycles),
+        sumUINTs(insertion_time, maxcycles),
+        sumUINTs(optimization_time, maxcycles),
+        sumUINTs(wholeframe_time, maxcycles)
+    );
+    
+    fclose(file);
+    #endif
     #if GRAPHICS_ON == 1
     // Clean up
     SDL_DestroyRenderer(renderer);

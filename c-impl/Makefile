@@ -13,6 +13,18 @@ OBJ = $(SRC:.c=.o)
 TESTS = tests
 TESTSRC = tests.c
 TESTOBJ = $(TESTSRC:.c=.o)
+
+# Header dependencies
+
+#DEPDIR = ./.deps
+#DEPFLAGS = -MMD -MF $(@:.o=.d)
+##    commented before too! #DEPFLAGS = -M #T $@ -MD -MP -MF $(DEPDIR)/$*.Td
+#DEPS := $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRC)))
+#-include $(DEPS)
+#
+#$(DEPDIR)/%.d: %.c
+#	$(CC) $(CFLAGS) $(DEPFLAGS) $< >$@
+#
 # Default target
 all: $(TARGET)
 
@@ -26,7 +38,11 @@ debug: CFLAGS += -fsanitize=address,undefined,leak
 debug: $(TARGET)
 
 release: CFLAGS = -std=c2x -O3 -fprofile-use
-release: $(TARGET)
+release: $(TARGET) 
+
+release_noprofile : CFLAGS = -std=c2x -O3
+release_noprofile: $(TARGET)
+
 # Link test file with object files
 $(TESTS): $(OBJ) $(TESTSRC)
 	$(CC) $(CFLAGS) -o $(TESTS) $(TESTSRC) $(OBJ) $(LDFLAGS)

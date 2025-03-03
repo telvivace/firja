@@ -13,6 +13,13 @@ static inline void tree_printObject(enum log_priorities priority,  object* obj){
     orb_logf(priority,"id: %ld\n x: %lf  y: %lf\n s: %lf v: (%lf, %lf) flags: %x",
     obj->id, obj->x, obj->y, obj->s, obj->v.x, obj->v.y, obj->flags);
 }
+static inline unsigned sumUINTs(unsigned* buf, unsigned count){
+    unsigned sum = 0;
+    for(unsigned i = 0; i < count; i++){
+        sum += buf[i];
+    }
+    return sum;
+}
 void tree_printBufferContents(enum log_priorities priority, object* buf);
 int tree_writeUintBufferToFile(const unsigned* buf, size_t size, char* foldername, char* filename);
 #endif
