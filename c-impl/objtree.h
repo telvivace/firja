@@ -49,6 +49,8 @@ struct treeNode {
     uint64_t places; //bitmask: vacant place = 1, filled = 0, start at least significant
     rect_llhh bindrect;
     unsigned level; //how deep is the node within the tree
+    uint16_t flags;
+    uint16_t optindex;
 };
 typedef struct treeNode treeNode;
 typedef struct {
@@ -70,15 +72,15 @@ struct objTree {
 };
 typedef struct objTree objTree;
 /*
-Initializes the k/d tree.
+Initializes the tree.
 */
 objTree* tree_initTree(void);
 /*
-Destroys the k/d tree.
+Destroys the tree.
 */
 void tree_deleteTree(objTree* tree);
 /*
-Traverses the BSP tree and gives the address of the node containing the object we need
+Traverses the tree and gives the address of the node containing the object we need
 */
 treeNode* tree_findParentNode(objTree* tree, object* obj);
 /*
@@ -86,8 +88,15 @@ Finds a vacant place in the object buffer of a leaf node. Returns an error if th
 */
 int tree_insertObject(objTree* tree, object* obj);
 /*
-Split a node along a x/y boundary.
+Split a node into two along a boundary parallel to the x/y axes.
 */
 int tree_splitNode(objTree* tree, treeNode* node);
-
+/*
+Submit a node into the optimization queue
+*/
+int tree_OptqueueSubmit(objTree* tree, treeNode* node);
+/*
+Optimize the tree using the optimization queue
+*/
+int tree_optimizeNodes(objTree* tree);
 #endif

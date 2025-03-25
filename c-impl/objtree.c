@@ -4,6 +4,7 @@
 #include "treeutils.h"
 #include "settings.h"
 #include "liblogs.h"
+#define NFLAG_IN_OPTQUEUE (uint16_t)1
 objTree* tree_initTree(){
     orb_logf(PRIORITY_DBUG,"init pool 1");
     tree_allocPool objectpool = tree_allocInitPool(1 * 1e6); //one million (1 MB)
@@ -22,8 +23,8 @@ objTree* tree_initTree(){
         .places = ~0UL,
         .split.isx = 1,
         .bindrect = (rect_llhh){
-            .lowlow = (point){.x = g_leftborder - 20, .y = g_bottomborder - 20},
-            .highhigh = (point){.x = g_rightborder + 20, .y = g_topborder + 20}
+            .lowlow = (point){.x = g_leftborder - 200, .y = g_bottomborder - 200},
+            .highhigh = (point){.x = g_rightborder + 200, .y = g_topborder + 200}
         }
     };
     *pMetadataStruct = (objTree){
@@ -31,6 +32,11 @@ objTree* tree_initTree(){
         .searchbufsize = SEARCHBUFSIZE,
         .root = pRoot,
         .bufCount = 1, //root node
+        .opt_queue = (treeOptimizationQueue){
+            .allocated = 100,
+            .nodecount = 0,
+            .nodes = calloc(1, 100*sizeof(treeNode*))
+        }
     };
     pMetadataStruct->objectAllocPool = objectpool;
     pMetadataStruct->nodeAllocPool = nodepool;
@@ -67,6 +73,9 @@ treeNode* tree_findParentNode(objTree* tree, object* obj){
                     orb_logf(PRIORITY_DBUG,"descend right");
                     currentNode = currentNode->right;
                 }
+                break;
+            default:
+                orb_log(PRIORITY_ERR, "what the hell? we got a 3rd dimension! it's %u", currentNode->split.isx);
         }
     }
 }
@@ -160,7 +169,7 @@ int tree_balanceBuffers2(treeNode* parent, treeNode* left_child, treeNode* right
         coordoffset = offsetof(object, y);
 
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
-        tree_printObject(parent->buf + i);
+        tree_printObject(PRIORITY_TRACE, parent->buf + i);
         orb_logf(PRIORITY_TRACE,"values compared: %c = %lf and average = %lf", 
             parent->split.isx ? 'x' : 'y', 
             *(double*)( (unsigned char*)&(parent->buf[i]) + coordoffset ),
@@ -216,7 +225,118 @@ int tree_insertObject(objTree* tree, object* obj){
         }
     }
     memcpy(parentNode->buf + __builtin_ctzl(parentNode->places), obj, sizeof(object));
-    parentNode->places &= ~(1 << __builtin_ctzl(parentNode->places)); //mark as occupied
+    parentNode->places &= ~(1UL << __builtin_ctzl(parentNode->places)); //mark as occupied
+    return 0;
+}
+int tree_optimizeNodes(objTree* tree){
+    for(unsigned i = 0; i < tree->opt_queue.nodecount; i++){
+        if(!tree->opt_queue.nodes[i]) continue;
+        treeNode* node1 = tree->opt_queue.nodes[i];
+        unsigned numObjects1 = __builtin_popcountl(~(node1->places)); //count the number of zeros
+        if(numObjects1 > ((unsigned)OBJBUFSIZE / 4U)){
+            //remove from queue
+            node1->flags &= ~(NFLAG_IN_OPTQUEUE);
+            tree->opt_queue.nodes[i] = (treeNode*)0; 
+            tree->opt_queue.nodecount--;
+            continue;
+        }
+        treeNode* node2;
+        if(node1->up->left == node1) node2 = node1->up->right;
+        else node2 = node1->up->left;
+        if(!node2->buf || !node1->buf) continue; //we can't merge with a non-leaf node
+        unsigned numObjects2 = __builtin_popcountl(~(node2->places));
+        if((numObjects1 + numObjects2) <= 2*OBJBUFSIZE/3){
+            node1->flags &= ~(NFLAG_IN_OPTQUEUE);
+            //orb_log(PRIORITY_WARN, "Optimizing nodes.");
+            treeNode* src;
+            treeNode* dest;
+            #if DBUG_MODE == 1
+            unsigned realcountL = 0;
+            unsigned realcountR = 0;
+            for(unsigned i = 0; i < OBJBUFSIZE; i++){
+                if(node1->up->left->buf[i].s) realcountL++;
+                if(node1->up->right->buf[i].s) realcountR++;
+            }
+            #endif
+            unsigned numObjects_src = 0;
+            if(numObjects1 > numObjects2){
+                src = node2;
+                dest = node1;
+                numObjects_src = numObjects2;
+                
+            }
+            else{
+                src = node1;
+                dest = node2;
+                numObjects_src = numObjects1;
+            }
+            unsigned srcoffset;
+            unsigned destoffset;
+            for(unsigned j = 0; j < numObjects_src; j++){
+                srcoffset =  __builtin_ctzl(~(src->places));
+                destoffset = __builtin_ctzl(dest->places);
+                memcpy(dest->buf + destoffset, src->buf + srcoffset, sizeof(object));
+                dest->places &= ~(1UL << destoffset);
+                src->places |= (1UL << srcoffset);
+            }
+            tree->opt_queue.nodes[i] = (treeNode*)0; 
+            //for future use, because balanceBuffers expects it to be calloc'd
+            memset(src->buf, '\0', OBJBUFSIZE*sizeof(object));
+            node1->flags &= ~(NFLAG_IN_OPTQUEUE);
+            dest->up->places = dest->places;
+            dest->up->buf = dest->buf;
+            
+            #if DBUG_MODE == 1
+            //check if the number of objects in both buffers is correct
+            unsigned papercountP = __builtin_popcountl(~(node1->up->places));
+            unsigned realcountP = 0;
+            for(unsigned k = 0; k < OBJBUFSIZE; k++){
+                if(node1->up->buf[k].s) realcountP++;
+            }
+            if(realcountL + realcountR != papercountP || realcountL + realcountR != realcountP){
+                orb_log(PRIORITY_WARN, "OptimizeNodes: Object count mismatch detected!");
+                orb_logf(PRIORITY_WARN, "Count on paper: %d(P). Real count: %d(P), was %d(L), %d(R).", papercountP, realcountP, realcountL, realcountR);
+                orb_logf(PRIORITY_WARN, "parent buffer: %p", dest->up->buf);
+                orb_logf(PRIORITY_WARN, "src places: %lx", src->places);
+                orb_logf(PRIORITY_WARN, "Parent node object count / sum of two children: %u/%u, %lx ",  __builtin_popcountl(~(node1->up->places)), numObjects1 + numObjects2, node1->up->places);
+                orb_logf(PRIORITY_WARN, "Parent buffer:");
+                tree_printBufferContents(PRIORITY_WARN, node1->up->buf);
+            }
+
+            #endif
+            dest->places = ~0UL;
+            dest->buf = (void*)0;
+            tree->opt_queue.nodecount--;
+        }
+    }
+    return 0;
+}
+int tree_OptqueueSubmit(objTree* tree, treeNode* node){
+    if(tree->opt_queue.allocated < tree->opt_queue.nodecount + 1){
+        size_t new_alloc = tree->opt_queue.allocated * 1.5;
+        treeNode** new_nodes = realloc(tree->opt_queue.nodes, new_alloc * sizeof(treeNode*));
+        if (!new_nodes) {
+            orb_logf(PRIORITY_ERR, "Memory allocation failed in tree_OptqueueSubmit");
+            return -1; // or handle gracefully
+        }
+        memset(new_nodes + tree->opt_queue.allocated, 0, 
+               (new_alloc - tree->opt_queue.allocated) * sizeof(treeNode*));
+        tree->opt_queue.nodes = new_nodes;
+        tree->opt_queue.allocated = new_alloc;
+        
+    }
+    node->flags |= NFLAG_IN_OPTQUEUE;
+    //fill in any holes that may have been created
+    for(unsigned i = 0; i < tree->opt_queue.nodecount; i++){
+        if(tree->opt_queue.nodes[i] == 0){
+            tree->opt_queue.nodes[i] = node;
+            tree->opt_queue.nodecount++;
+            return 0;
+        }
+    }
+    //if the loop hasn't returned, it's a continuous block so we can just write
+    tree->opt_queue.nodes[tree->opt_queue.nodecount] = node;
+    tree->opt_queue.nodecount++;
     return 0;
 }
 
@@ -246,37 +366,45 @@ int tree_splitNode(objTree* tree, treeNode* node){
     double average = accumulator/OBJBUFSIZE; // not the best but cheaper than getting the median 
 
     node->split.value = average;
-    orb_logf(PRIORITY_DBUG,"checked for axis of split. allocating nodes");
-    node->left = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
-    node->right = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
-    orb_logf(PRIORITY_DBUG, "allocated nodes. allocating buffers");
-    *(node->left) = (treeNode){
-        .buf = node->buf, //reuse parent buf. Only works with balanceBuffers2
-        .up = node,
-        .places = ~0UL,
-        .bindrect = (rect_llhh){
-            .lowlow = node->bindrect.lowlow,
-            .highhigh = node->split.isx ? 
-                (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
-                :
-                (point){ .x = node->bindrect.highhigh.x, .y = node->split.value}
-        },
-        .level = node->level + 1,
-    };
-    *(node->right) = (treeNode){
-        .buf = tree_allocate(tree->objectAllocPool, sizeof(object)*OBJBUFSIZE),
-        .up = node,
-        .places = ~0UL,
-        .bindrect = (rect_llhh){
-            .lowlow = node->split.isx ? 
-                (point){ .x = node->split.value, .y = node->bindrect.lowlow.y}
-                :
-                (point){ .x = node->bindrect.lowlow.x, .y = node->split.value},
-            .highhigh = node->bindrect.highhigh
-        },
-        .level = node->level + 1,
-    };
-    tree->bufCount++;
+    if(!node->left){
+        node->left = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
+        *(node->left) = (treeNode){
+            .buf = node->buf, //reuse parent buf. Only works with balanceBuffers2
+            .up = node,
+            .places = ~0UL,
+            .level = node->level + 1,
+        };
+    }
+    if(!node->right){
+        tree->bufCount++;
+        node->right = tree_allocate(tree->nodeAllocPool, sizeof(treeNode));
+        *(node->right) = (treeNode){
+            .buf = tree_allocate(tree->objectAllocPool, sizeof(object)*OBJBUFSIZE),
+            .up = node,
+            .places = ~0UL,
+            .level = node->level + 1,
+        };
+    }
+    //we are left with two child nodes, of which one has a buffer and one doesn't.
+    node->left->bindrect = (rect_llhh){
+                .lowlow = node->bindrect.lowlow,
+                .highhigh = node->split.isx ? 
+                    (point){ .x = node->split.value, .y = node->bindrect.highhigh.y}
+                    :
+                    (point){ .x = node->bindrect.highhigh.x, .y = node->split.value}
+            };
+    node->right->bindrect = (rect_llhh){
+                .lowlow = node->split.isx ? 
+                    (point){ .x = node->split.value, .y = node->bindrect.lowlow.y}
+                    :
+                    (point){ .x = node->bindrect.lowlow.x, .y = node->split.value},
+                .highhigh = node->bindrect.highhigh
+            };
+    //one may have a null buffer if it was merged before by the tree optimization function
+    if(!node->left->buf) node->left->buf = node->buf;
+    else if(!node->right->buf) node->right->buf = node->buf;
+    //we are left with two children, one has its own buffer and one has a duplicated parent buffer.
+    
     orb_logf(PRIORITY_TRACE,"Parent node has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->bindrect.lowlow.x, node->bindrect.highhigh.x, node->bindrect.lowlow.y, node->bindrect.highhigh.y);
     orb_logf(PRIORITY_TRACE,"Left child has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->left->bindrect.lowlow.x, node->left->bindrect.highhigh.x, node->left->bindrect.lowlow.y, node->left->bindrect.highhigh.y);
     orb_logf(PRIORITY_TRACE,"Right child has a rectangle of x: %lf -- %lf, y: %lf -- %lf ", node->right->bindrect.lowlow.x, node->right->bindrect.highhigh.x, node->right->bindrect.lowlow.y, node->right->bindrect.highhigh.y);
