@@ -169,6 +169,36 @@ int main(int argc, char* argv[static 1]){
         globalInfo->objectCount++;
     }
     #else
+
+
+    // testing code remove later ˇ
+    // tree_insertObject(globalInfo->tree, &(object){
+    //         .m = 5,//rand() % 15 + 4, 
+    //         .s = 10,//rand() % (MAXOBJSIZE-5) + 5, 
+    //         .x = g_leftborder / 2 - 10,
+    //         .y = g_bottomborder / 2 - 10,
+    //         .v = (speed){
+    //             .x = 1,
+    //             .y = 1,
+    //         },
+    //         .id = 1,
+    //     });
+    // globalInfo->objectCount++;
+
+    // tree_insertObject(globalInfo->tree, &(object){
+    //         .m = 5,//rand() % 15 + 4, 
+    //         .s = 10,//rand() % (MAXOBJSIZE-5) + 5, 
+    //         .x = g_leftborder / 2 + 10,
+    //         .y = g_bottomborder / 2 + 10,
+    //         .v = (speed){
+    //             .x = 1,
+    //             .y = 1,
+    //         },
+    //         .id = 2,
+    //     });
+    // globalInfo->objectCount++;
+    // testing code remove later ^
+
     
     for(unsigned i = 0; i < numObjects; i++){
         orb_logf(PRIORITY_TRACE, "iteration %d", i);
@@ -179,8 +209,8 @@ int main(int argc, char* argv[static 1]){
             .x = rand() % ((unsigned long)g_rightborder - (unsigned long)g_leftborder - 10) + 5,
             .y = rand() % ((unsigned long)g_topborder - (unsigned long)g_bottomborder- 10) + 5,
             .v = (speed){
-                .x = ((rand() % 10) - 5) / 2.0f,
-                .y = ((rand() % 10) - 5) / 2.0f,
+                .x = ((rand() % 10) - 5) / 2.0f + 3,
+                .y = ((rand() % 10) - 5) / 2.0f + 3,
             },
             .id = i,
         });
@@ -298,6 +328,8 @@ int main(int argc, char* argv[static 1]){
         // Delay to cap frame rate
         SDL_Delay(10); // ~60 FPS
         #endif
+
+        sleep(1);
 
         cycles++;
         frames++;

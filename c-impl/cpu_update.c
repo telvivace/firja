@@ -33,6 +33,9 @@ int vector_update_aux(objTree* tree, treeNode* node){
         orb_logf(PRIORITY_BLANK,"%d..", i);
         object* obj = node->buf + i;
         if(obj->s){
+
+            //one day code will be here
+
             if(obj->hit) {
                 orb_logf(PRIORITY_TRACE,"object velocity is x:%f y:%f", obj->v.x, obj->v.y);
                 speed v_cm = {
@@ -48,6 +51,9 @@ int vector_update_aux(objTree* tree, treeNode* node){
                     .x = (obj->hit->v.x - v_cm.x)*-1 + v_cm.x,
                     .y = (obj->hit->v.y - v_cm.y)*-1 + v_cm.y,
                 };
+
+
+
                 obj->hit->hit = 0;
                 obj->hit = 0;
             }
