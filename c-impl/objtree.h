@@ -58,6 +58,24 @@ typedef struct {
     unsigned allocated;
     treeNode** nodes;
 } treeOptimizationQueue;
+
+typedef struct {
+    unsigned start;
+    unsigned length;
+} hitGroup;
+
+typedef struct {
+    unsigned groupcount;
+    unsigned allocated;
+    hitGroup* groups;
+} hitGroupQueue;
+
+typedef struct {
+    unsigned objcount;
+    unsigned allocated;
+    object* objects;
+} hitObjectQueue;
+
 struct objTree {
     unsigned depth;
     unsigned searchbufsize;
@@ -65,6 +83,8 @@ struct objTree {
     tree_allocPool nodeAllocPool;
     treeNode* root;
     object** searchbuf;
+    hitObjectQueue hitObjectQueue;
+    hitGroupQueue hitGroupQueue;
     unsigned bufCount;
     unsigned long validObjCount;
     unsigned long relocations;
