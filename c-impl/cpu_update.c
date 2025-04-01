@@ -10,23 +10,26 @@
 
 int vector_update(objTree* tree){
     orb_logf(PRIORITY_DBUG,"Vector update.");
-    for(unsigned i = 0; i < tree->hitQueue.objcount; i++){
-        object* first = tree->hitQueue.hits[i].first;
-        object* second = tree->hitQueue.hits[i].second;
-        orb_logf(PRIORITY_TRACE,"object velocity is x:%f y:%f", first->v.x, first->v.y);
-        speed v_cm = {
-            .x = (first->m * first->v.x + second->m * second->v.x)/(first->m + second->m),
-            .y = (first->m * first->v.y + second->m * second->v.y)/(first->m + second->m)
-        };
-        first->v = (speed){
-            .x = (first->v.x - v_cm.x)*-1 + v_cm.x,
-            .y = (first->v.y - v_cm.y)*-1 + v_cm.y,
-        };
-        orb_logf(PRIORITY_TRACE,"setting object velocity to x:%f y:%f", first->v.x, first->v.y);
-        second->v = (speed){
-            .x = (second->v.x - v_cm.x)*-1 + v_cm.x,
-            .y = (second->v.y - v_cm.y)*-1 + v_cm.y,
-        };
+    for(unsigned i = 0; i < tree->hitGroupQueue.groupcount; i++){
+        object* first = tree->hitObjectQueue.objects + tree->hitGroupQueue.groups[i].start;
+        for(unsigned j = 1; j < tree->hitGroupQueue.groups[i].length; j++){
+            object* second = tree->hitObjectQueue.objects + tree->hitGroupQueue.groups[i].start + j;
+            
+            orb_logf(PRIORITY_TRACE,"object velocity is x:%f y:%f", first->v.x, first->v.y);
+            speed v_cm = {
+                .x = (first->m * first->v.x + second->m * second->v.x)/(first->m + second->m),
+                .y = (first->m * first->v.y + second->m * second->v.y)/(first->m + second->m)
+            };
+            first->v = (speed){
+                .x = (first->v.x - v_cm.x)*-1 + v_cm.x,
+                .y = (first->v.y - v_cm.y)*-1 + v_cm.y,
+            };
+            orb_logf(PRIORITY_TRACE,"setting object velocity to x:%f y:%f", first->v.x, first->v.y);
+            second->v = (speed){
+                .x = (second->v.x - v_cm.x)*-1 + v_cm.x,
+                .y = (second->v.y - v_cm.y)*-1 + v_cm.y,
+            }; 
+        }
     }
     orb_logf(PRIORITY_TRACE, "\n");
     return 0;

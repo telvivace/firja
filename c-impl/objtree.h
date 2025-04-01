@@ -29,7 +29,7 @@ struct object {
     speed v;
     float s;
     unsigned m;
-    struct object* hit; //optional pointer to an object currently overlapping this one
+    hitGroup* hitgroup; //optional pointer to an object currently overlapping this one
     unsigned long id;
     unsigned flags;
 };
@@ -59,6 +59,10 @@ typedef struct {
     treeNode** nodes;
 } treeOptimizationQueue;
 
+//a hitgroup is a short section of the hit queue.
+//it has an object pointer in the beginning, followed by
+//other object pointers. The first object collides with all
+//the others, but they don't collide among themselves.
 typedef struct {
     unsigned start;
     unsigned length;
@@ -73,7 +77,7 @@ typedef struct {
 typedef struct {
     unsigned objcount;
     unsigned allocated;
-    object* objects;
+    object** objects;
 } hitObjectQueue;
 
 struct objTree {
