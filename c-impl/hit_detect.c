@@ -82,8 +82,8 @@ static int hit_flagObjects_aux(objTree* tree, treeNode* node){
         orb_logf(PRIORITY_TRACE,"Structure no. %d has fields:"\
                "x: %lf y: %lf\n"\
                "s: %f m: %d\n"\
-               "hit pointer: %p", i,  node->buf[i].x, node->buf[i].y, node->buf[i].s, node->buf[i].m, node->buf[i].hit);
-        if(node->buf[i].s && !node->buf[i].hit){ //if size is zero then the object is either uninitialized or does not interact physically
+               "hit pointer: %p", i,  node->buf[i].x, node->buf[i].y, node->buf[i].s, node->buf[i].m, node->buf[i].hitgroup);
+        if(node->buf[i].s){ //if size is zero then the object is either uninitialized or does not interact physically
             orb_logf(PRIORITY_TRACE,"Non-collided object detected:\n\tObject no. %d is valid", i); 
             
             //search for buffers that contain the object (node->buf[i])'s area of influence
@@ -102,18 +102,41 @@ static int hit_flagObjects_aux(objTree* tree, treeNode* node){
                 },
                 tree->searchbuf
             );
+            unsigned hitscount = 0;
             //do hit detection with the buffers found
             for(unsigned bufindex = 0; bufindex < numResults; bufindex++){
                 object* buf = tree->searchbuf[bufindex];
                 for(unsigned j = 0; j < OBJBUFSIZE; j++){
                     if(buf + j == node->buf + i) continue; //shouldnt hit itself
-                    if(buf[j].s && !buf[j].hit){
+                    if(buf[j].s){
                         double dist = SQUARE(buf[j].x - node->buf[i].x) + SQUARE(buf[j].y - node->buf[i].y);
                         orb_logf(PRIORITY_TRACE,"\tDistance between objects %d and %d is %lf", i, j, dist);
                         
                         if(dist < SQUARE(node->buf[i].s + buf[j].s)){
-                            node->buf[i].hit = buf + j;
-                            buf[j].hit       = node->buf + i;
+                            hitscount++;
+
+                            if(buf[j].hitgroup){
+                                
+                                //check if node->buf[i] is already in a collision with buf[j] 
+                                //it starts at 1 because the first object in the hitgroup is buf[i]
+                                for(unsigned k = 1; k < buf[j].hitgroup->length; k++){
+                                    if(*(tree->hitObjectQueue.objects + buf[j].hitgroup->start + k) == node->buf + i){
+                                        continue;//ensures that a pair of objects is processed only once!
+                                    }
+                                }
+                            }
+                            
+                            if(hitscount == 1){
+                                tree->hitObjectQueue.objects[tree->hitObjectQueue.objcount] = node->buf + i;
+                                tree->hitGroupQueue.groups[tree->hitGroupQueue.groupcount] = (hitGroup){
+                                    .start = tree->hitObjectQueue.objcount, 
+                                    .length = 1,
+                                };
+                                tree->hitObjectQueue.objcount++;
+                            }
+                            tree->hitObjectQueue.objects[tree->hitObjectQueue.objcount] = buf + j;
+                            tree->hitObjectQueue.objcount++;
+
                             orb_logf(PRIORITY_TRACE,"\tObject no. %d in buffer1 intersects with object no. %d in buffer%d", i, bufindex, j);
                             break;
                         }

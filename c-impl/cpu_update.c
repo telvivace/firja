@@ -30,7 +30,7 @@ int vector_update(objTree* tree){
                 .y = (second->v.y - v_cm.y)*-1 + v_cm.y,
             }; 
         }
-    }
+    } 
     orb_logf(PRIORITY_TRACE, "\n");
     return 0;
 }
