@@ -79,7 +79,7 @@ static int hit_flagObjects_aux(objTree* tree, treeNode* node){
         return 0;
     }
     for(unsigned i = 0; i < OBJBUFSIZE; i++){
-        orb_logf(PRIORITY_TRACE,"Structure no. %d has fields:"\
+        orb_logf(PRIORITY_TRACE,"Object no. %d has fields:"\
                "x: %lf y: %lf\n"\
                "s: %f m: %d\n"\
                "hit pointer: %p", i,  node->buf[i].x, node->buf[i].y, node->buf[i].s, node->buf[i].m, node->buf[i].hitgroup);
@@ -102,12 +102,16 @@ static int hit_flagObjects_aux(objTree* tree, treeNode* node){
                 },
                 tree->searchbuf
             );
+            //this loop creates one complete hitgroup for our current object
             unsigned hitscount = 0;
+            if(tree->hitGroupQueue.groupcount*sizeof(object) >= tree->hitGroupQueue.allocated){
+                tree->hitGroupQueue.groups = realloc(tree->hitGroupQueue.groups, (unsigned){tree->hitGroupQueue.allocated*1.5});
+            }
             //do hit detection with the buffers found
             for(unsigned bufindex = 0; bufindex < numResults; bufindex++){
                 object* buf = tree->searchbuf[bufindex];
                 for(unsigned j = 0; j < OBJBUFSIZE; j++){
-                    if(buf + j == node->buf + i) continue; //shouldnt hit itself
+                    if(buf + j == node->buf + i) continue; //must not hit itself
                     if(buf[j].s){
                         double dist = SQUARE(buf[j].x - node->buf[i].x) + SQUARE(buf[j].y - node->buf[i].y);
                         orb_logf(PRIORITY_TRACE,"\tDistance between objects %d and %d is %lf", i, j, dist);
@@ -121,27 +125,35 @@ static int hit_flagObjects_aux(objTree* tree, treeNode* node){
                                 //it starts at 1 because the first object in the hitgroup is buf[i]
                                 for(unsigned k = 1; k < buf[j].hitgroup->length; k++){
                                     if(*(tree->hitObjectQueue.objects + buf[j].hitgroup->start + k) == node->buf + i){
-                                        continue;//ensures that a pair of objects is processed only once!
+                                        continue;//ensures that a pair of objects is processed only once
                                     }
                                 }
                             }
+                            if(tree->hitObjectQueue.objcount*sizeof(object) >= tree->hitObjectQueue.allocated){
+                                tree->hitObjectQueue.objects = realloc(tree->hitObjectQueue.objects, (unsigned){tree->hitObjectQueue.allocated*1.5});
+                            }
                             
                             if(hitscount == 1){
+                                //if this is our first detected hit
                                 tree->hitObjectQueue.objects[tree->hitObjectQueue.objcount] = node->buf + i;
                                 tree->hitGroupQueue.groups[tree->hitGroupQueue.groupcount] = (hitGroup){
                                     .start = tree->hitObjectQueue.objcount, 
-                                    .length = 1,
+                                    .length = 2, //includes the first object
                                 };
                                 tree->hitObjectQueue.objcount++;
                             }
                             tree->hitObjectQueue.objects[tree->hitObjectQueue.objcount] = buf + j;
                             tree->hitObjectQueue.objcount++;
+                            tree->hitGroupQueue.groups[tree->hitGroupQueue.groupcount].length++;
 
                             orb_logf(PRIORITY_TRACE,"\tObject no. %d in buffer1 intersects with object no. %d in buffer%d", i, bufindex, j);
                             break;
                         }
                     }
                 }
+            }
+            if(hitscount){
+                tree->hitGroupQueue.groupcount++;
             }
         }
     }

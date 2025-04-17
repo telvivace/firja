@@ -31,6 +31,9 @@ int vector_update(objTree* tree){
             }; 
         }
     } 
+    tree->hitGroupQueue.groupcount = 0;
+    tree->hitObjectQueue.objcount = 0;
+    
     orb_logf(PRIORITY_TRACE, "\n");
     return 0;
 }
